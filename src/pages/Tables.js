@@ -43,6 +43,20 @@ function Tables() {
   // Pagination setup
   const resultsPerPage = 10;
 
+
+  const getPageTitle = () => {
+    switch (miqaatType) {
+      case 'general_miqaats':
+        return 'General Miqaats';
+      case 'ramadan':
+        return 'Ramadan Miqaats';
+      case 'private_events':
+        return 'Private Events';
+      default:
+        return 'Miqaats'; 
+    }
+  };
+
   const fetchMiqaatData = async (page, type) => {
     if (fetchingRef.current) return;
 
@@ -202,7 +216,7 @@ function Tables() {
     <>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <PageTitle>Miqaats</PageTitle>
+        <PageTitle>{getPageTitle()}</PageTitle>
 
         </div>
         <Button onClick={handleCreateClick} className="flex items-center">
