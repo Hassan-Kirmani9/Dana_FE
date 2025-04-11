@@ -194,7 +194,6 @@ function Distribution() {
                   <TableCell>ID</TableCell>
                   <TableCell>Menu</TableCell>
                   <TableCell>Quantity</TableCell>
-                  <TableCell>Filled %</TableCell>
                   <TableCell>Ibadullah</TableCell>
                   <TableCell>Mumin</TableCell>
                   <TableCell>Total</TableCell>
@@ -214,11 +213,7 @@ function Distribution() {
                     <TableCell>
                       <span className="text-sm">{item.quantity || 'N/A'}</span>
                     </TableCell>
-                    <TableCell>
-                      <Badge type="success">
-                        {item.filled_percentage || 'N/A'}%
-                      </Badge>
-                    </TableCell>
+                    
                     <TableCell>
                       <span className="text-sm font-medium">
                         {item.ibadullah_count != null ? item.ibadullah_count : 'N/A'}
@@ -299,12 +294,7 @@ function Distribution() {
                           <p className="text-sm text-gray-500 mb-1">Quantity:</p>
                           <p className="text-sm">{item.quantity || 'N/A'}</p>
                         </div>
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Filled %:</p>
-                          <p className="text-sm text-green-600">
-                            {item.filled_percentage || 'N/A'}%
-                          </p>
-                        </div>
+                       
                         <div>
                           <p className="text-sm text-gray-500 mb-1">Ibadullah Count:</p>
                           <p className="text-sm">{item.ibadullah_count != null ? item.ibadullah_count : 'N/A'}</p>
