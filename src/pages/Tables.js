@@ -216,18 +216,18 @@ function Tables() {
       {/* Loading State */}
       {isLoading ? (
         <div className="flex justify-center my-8">
-          <p className="text-gray-700">Loading data...</p>
+          <p className="text-gray-700 dark:text-gray-400">Loading data...</p>
         </div>
       ) : tableData.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-700">No records found</p>
+          <p className="text-gray-700 dark:text-gray-400">No records found</p>
         </div>
       ) : (
         <>
           {/* Desktop Table - Hidden on mobile */}
           <div className="hidden md:block overflow-x-auto rounded-lg border">
-            <table className="w-full">
-              <thead className="bg-gray-50">
+            <table className="w-full dark:bg-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-800 dark:border-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">SNO.</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">MIQAAT NAME</th>
@@ -237,14 +237,14 @@ function Tables() {
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y dark:bg-gray-800 dark:border-gray-50">
                 {tableData.map((event, index) => (
                   <tr key={event.id} className="bg-white">
-                    <td className="px-4 py-3 text-sm">{startIndex + index + 1}</td>
-                    <td className="px-4 py-3 text-sm font-medium">{event.miqaat_name}</td>
-                    <td className="px-4 py-3 text-sm">{new Date(event.miqaat_date).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-sm">{event.hijri_date}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:border-gray-50 dark:text-gray-400 ">{startIndex + index + 1}</td>
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:border-gray-50 dark:text-gray-400 font-medium">{event.miqaat_name}</td>
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:border-gray-50 dark:text-gray-400">{new Date(event.miqaat_date).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:border-gray-50 dark:text-gray-400">{event.hijri_date}</td>
+                    <td className="px-4 py-3 dark:bg-gray-800 dark:border-gray-50">
                       <div className="flex items-center space-x-1">
                         {[
                           { name: 'Menu', type: 'miqaat-menu' },
@@ -263,16 +263,16 @@ function Tables() {
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 dark:bg-gray-800 dark:border-gray-50">
                       <div className="flex items-center gap-2">
                         <button
-                          className="text-gray-600 hover:text-blue-600"
+                          className="text-gray-600 dark:text-gray-400 hover:text-blue-600"
                           onClick={() => history.push(`/app/edit-miqaat/${event.id}`)}
                         >
                           <FaEdit className="h-4 w-4" />
                         </button>
                         <button
-                          className="text-gray-600 hover:text-red-600"
+                          className="text-gray-600 dark:text-gray-400 hover:text-red-600"
                           onClick={() => handleDeleteMiqaat(event.id)}
                         >
                           <FaTrash className="h-4 w-4" />
@@ -333,7 +333,7 @@ function Tables() {
           {/* Pagination */}
           <div className="flex items-center justify-between mt-4">
             <div className="text-sm text-gray-500">
-              SHOWING {startIndex + 1}-{Math.min(startIndex + resultsPerPage, tableData.length)} OF {tableData.length}
+              Showing {startIndex + 1}-{Math.min(startIndex + resultsPerPage, tableData.length)} OF {tableData.length}
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -341,7 +341,7 @@ function Tables() {
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                <FaChevronLeft className="h-4 w-4" />
+                <FaChevronLeft className="h-4 w-4 dark:text-gray-400" />
               </button>
               <div className="px-4 py-2 bg-purple-600 text-white rounded">
                 {currentPage}
@@ -351,7 +351,7 @@ function Tables() {
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                <FaChevronRight className="h-4 w-4" />
+                <FaChevronRight className="h-4 w-4 dark:text-gray-400" />
               </button>
             </div>
           </div>
@@ -397,7 +397,7 @@ function Tables() {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-4">Features</p>
+                <p className="text-sm text-gray-500 mb-4 ">Features</p>
                 <div className="grid grid-cols-2 gap-4">
                   {[
                     { name: 'Menu', type: 'miqaat-menu', color: 'bg-blue-500' },

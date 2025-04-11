@@ -137,7 +137,7 @@ function MiqaatMenu() {
                         style={{
                             fontSize: window.innerWidth < 768 ? '1.25rem' : '1.5rem',
                         }}
-                        className='font-semibold'
+                        className='font-semibold dark:text-white'
                     >
                         Miqaat Menu
                         {miqaatDetails && ` - ${miqaatDetails.miqaat_name}`}

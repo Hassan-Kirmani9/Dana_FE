@@ -116,8 +116,8 @@ function Distribution() {
             style={{
               fontSize: window.innerWidth < 768 ? '1rem' : '1.5rem',
             }}
-            className='font-semibold'
-          >            Distribution 
+            className='font-semibold dark:text-white'
+          >            Distribution
           </h1>
         </div>
         <Button onClick={handleAddDistribution} className="flex items-center"
@@ -126,7 +126,7 @@ function Distribution() {
             padding: window.innerWidth < 768 ? '0.5rem' : '0.75rem'
           }}>
           <AiOutlinePlusCircle className="w-4 h-4 mr-1" />
-          Add 
+          Add
         </Button>
       </div>
 
