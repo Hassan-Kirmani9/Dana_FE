@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useLocation, useHistory } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import { get, _delete } from '../api/axios';
-import { 
+import {
   Table,
   TableHeader,
   TableCell,
   TableBody,
   TableRow,
   TableContainer,
-  Button 
 } from '@windmill/react-ui';
-import { 
-  AiOutlinePlusCircle, 
-  AiOutlineArrowLeft, 
+import {
+  AiOutlinePlusCircle,
+  AiOutlineArrowLeft,
   AiOutlineDelete,
   AiOutlineEdit,
-  AiOutlineDown 
+  AiOutlineDown,
 } from 'react-icons/ai';
 import CreateLeftoverDegsModal from './CreateLeftoverDegsModal';
 import EditLeftoverDegsModal from '../components/EditLeftoverDegsModal';
@@ -23,7 +22,6 @@ import toast from 'react-hot-toast';
 
 function LeftoverDegs() {
   const { id } = useParams();
-  const location = useLocation();
   const history = useHistory();
 
   const [leftoverData, setLeftoverData] = useState(null);
@@ -36,25 +34,7 @@ function LeftoverDegs() {
   const [expandedItem, setExpandedItem] = useState(null);
 
   useEffect(() => {
-    if (location.state?.featureData) {
-      setLeftoverData(location.state.featureData);
-      setIsLoading(false);
-      return;
-    }
-
     fetchLeftoverData();
-  }, [id, location.state]);
-
-  useEffect(() => {
-    const fetchMiqaatDetails = async () => {
-      try {
-        const response = await get(`/miqaat/${id}`);
-        setMiqaatDetails(response);
-      } catch (error) {
-        console.error('Error fetching miqaat details:', error);
-      }
-    };
-
     fetchMiqaatDetails();
   }, [id]);
 
@@ -63,13 +43,23 @@ function LeftoverDegs() {
     setError(null);
 
     try {
-      const response = await get(`/leftover-degs/${id}`);
+      const response = await get(`/leftover-degs/${id}/`);
       setLeftoverData(response);
     } catch (err) {
       console.error('Error fetching leftover degs data:', err);
       setError('Failed to load leftover degs data. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchMiqaatDetails = async () => {
+    try {
+      const response = await get(`/miqaat/${id}/`);
+      setMiqaatDetails(response);
+    } catch (err) {
+      console.error('Error fetching miqaat details:', err);
+      // Don't set error state to avoid blocking UI
     }
   };
 
@@ -98,15 +88,12 @@ function LeftoverDegs() {
   const handleDeleteLeftoverDeg = async (leftoverDegId) => {
     try {
       const confirmDelete = window.confirm('Are you sure you want to delete this leftover degs record?');
-      
       if (confirmDelete) {
         await _delete(`/leftover-degs/${leftoverDegId}/`);
-        
         setLeftoverData(prevData => ({
           ...prevData,
-          leftover_degs: prevData.leftover_degs.filter(item => item.id !== leftoverDegId)
+          leftover_degs: prevData.leftover_degs.filter(item => item.id !== leftoverDegId),
         }));
-        
         toast.success('Leftover degs record deleted successfully');
       }
     } catch (error) {
@@ -122,33 +109,31 @@ function LeftoverDegs() {
   return (
     <div className="w-full px-4 py-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <button 
-            onClick={handleBackClick}
-            className="mr-4"
-          >
+          <button onClick={handleBackClick} className="mr-4">
             <AiOutlineArrowLeft className="w-5 h-5 dark:text-white" />
           </button>
           <h1
             style={{
               fontSize: window.innerWidth < 768 ? '1.25rem' : '1.5rem',
             }}
-            className='font-semibold dark:text-white'
+            className="font-semibold dark:text-white"
           >
             Leftover Degs
+            {miqaatDetails && ` - ${miqaatDetails.miqaat_name}`}
           </h1>
         </div>
-        <button 
-          onClick={handleAddLeftoverDeg} 
+        <button
+          onClick={handleAddLeftoverDeg}
           className="flex items-center bg-purple-600 text-white rounded-lg"
           style={{
             fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem',
-            padding: window.innerWidth < 768 ? '0.5rem 1rem' : '0.75rem 1rem'
+            padding: window.innerWidth < 768 ? '0.5rem 1rem' : '0.75rem 1rem',
           }}
         >
-          <AiOutlinePlusCircle 
-            className={`mr-1 ${window.innerWidth < 768 ? 'w-3 h-3' : 'w-4 h-4'}`} 
+          <AiOutlinePlusCircle
+            className={`mr-1 ${window.innerWidth < 768 ? 'w-3 h-3' : 'w-4 h-4'}`}
           />
           Add
         </button>
@@ -157,13 +142,13 @@ function LeftoverDegs() {
       {/* Loading State */}
       {isLoading ? (
         <div className="flex justify-center my-8">
-          <p className="text-gray-700">Loading data...</p>
+          <p className="text-gray-700 dark:text-gray-400">Loading data...</p>
         </div>
       ) : error ? (
         <div className="text-center py-8">
           <p className="text-red-600">{error}</p>
-          <button 
-            onClick={fetchLeftoverData} 
+          <button
+            onClick={fetchLeftoverData}
             className="mt-4 bg-purple-600 text-white px-4 py-2 rounded"
           >
             Retry
@@ -215,9 +200,15 @@ function LeftoverDegs() {
                       <span className="text-sm">{item.zone_name || 'N/A'}</span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <button 
+                      <button
+                        onClick={() => handleEditLeftoverDeg(item)}
+                        className="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-500 mr-2"
+                      >
+                        <AiOutlineEdit className="h-4 w-4 inline-block" />
+                      </button>
+                      <button
                         onClick={() => handleDeleteLeftoverDeg(item.id)}
-                        className="text-gray-600 hover:text-red-600"
+                        className="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500"
                       >
                         <AiOutlineDelete className="h-4 w-4 inline-block" />
                       </button>
@@ -232,77 +223,80 @@ function LeftoverDegs() {
           <div className="md:hidden space-y-3">
             {!leftoverData?.leftover_degs || leftoverData.leftover_degs.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-700">No leftover degs records found</p>
+                <p className="text-gray-700 dark:text-gray-400">No leftover degs records found</p>
               </div>
             ) : (
               leftoverData.leftover_degs.map((item, index) => (
-                <div 
-                  key={item.id} 
-                  className="bg-white rounded-lg shadow-md border"
+                <div
+                  key={item.id}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-md border dark:border-gray-700"
                 >
                   <div
                     className="flex items-center justify-between p-4 cursor-pointer"
                     onClick={() => toggleExpand(item.id)}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="bg-gray-100 h-8 w-8 rounded-full flex items-center justify-center text-gray-700 font-medium">
+                      <div className="bg-gray-100 dark:bg-gray-700 h-8 w-8 rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 font-medium">
                         {index + 1}
                       </div>
-                      <div className="font-medium">{item.menu_name || 'N/A'}</div>
+                      <div className="font-medium text-gray-800 dark:text-gray-200">{item.menu_name || 'N/A'}</div>
                     </div>
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleExpand(item.id);
                       }}
-                      className="text-gray-600"
+                      className="text-gray-600 dark:text-gray-400"
                     >
-                      <AiOutlineDown className="h-4 w-4" />
+                      <AiOutlineDown
+                        className={`h-4 w-4 transition-transform ${expandedItem === item.id ? 'rotate-180' : ''}`}
+                      />
                     </button>
                   </div>
 
                   {expandedItem === item.id && (
-                    <div className="px-4 pb-4 pt-0 border-t">
+                    <div className="px-4 pb-4 pt-0 border-t dark:border-gray-700">
                       <div className="mt-2 space-y-2">
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Container:</p>
-                          <p className="text-sm">{item.container_name || 'N/A'}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Container:</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">{item.container_name || 'N/A'}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Unit:</p>
-                          <p className="text-sm">{item.unit_name || 'N/A'}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Unit:</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">{item.unit_name || 'N/A'}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Total Cooked:</p>
-                          <p className="text-sm">{item.total_cooked != null ? item.total_cooked : 'N/A'}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Cooked:</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {item.total_cooked != null ? item.total_cooked : 'N/A'}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Total Received:</p>
-                          <p className="text-sm">{item.total_received != null ? item.total_received : 'N/A'}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Received:</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {item.total_received != null ? item.total_received : 'N/A'}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Zone:</p>
-                          <p className="text-sm">{item.zone_name || 'N/A'}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Zone:</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">{item.zone_name || 'N/A'}</p>
                         </div>
                       </div>
-                      <div className="mt-4 flex justify-between items-center">
-                        <div className="flex-grow"></div>
-                        <div className="flex space-x-2">
-                          <button 
-                            onClick={() => handleEditLeftoverDeg(item)}
-                            className="text-white px-4 py-1 rounded-md bg-blue-600 flex items-center"
-                          >
-                            <AiOutlineEdit className="h-4 w-4 mr-1" />
-                            Edit
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteLeftoverDeg(item.id)}
-                            className="text-white px-4 py-1 rounded-md bg-red-600 flex items-center"
-                          >
-                            <AiOutlineDelete className="h-4 w-4 mr-1" />
-                            Delete
-                          </button>
-                        </div>
+                      <div className="mt-4 flex justify-end space-x-2">
+                        <button
+                          onClick={() => handleEditLeftoverDeg(item)}
+                          className="text-white px-4 py-1 rounded-md bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 flex items-center"
+                        >
+                          <AiOutlineEdit className="h-4 w-4 mr-1" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteLeftoverDeg(item.id)}
+                          className="text-white px-4 py-1 rounded-md bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 flex items-center"
+                        >
+                          <AiOutlineDelete className="h-4 w-4 mr-1" />
+                          Delete
+                        </button>
                       </div>
                     </div>
                   )}
@@ -313,15 +307,16 @@ function LeftoverDegs() {
         </>
       )}
 
-      {/* Create Leftover Degs Modal */}
-      <CreateLeftoverDegsModal
-        isOpen={isCreateModalOpen}
-        onClose={handleCreateModalClose}
-        miqaatId={id}
-        onSuccess={fetchLeftoverData}
-      />
+      {/* Modals */}
+      {isCreateModalOpen && (
+        <CreateLeftoverDegsModal
+          isOpen={isCreateModalOpen}
+          onClose={handleCreateModalClose}
+          miqaatId={id}
+          onSuccess={fetchLeftoverData}
+        />
+      )}
 
-      {/* Edit Leftover Degs Modal */}
       {isEditModalOpen && currentLeftoverDeg && (
         <EditLeftoverDegsModal
           isOpen={isEditModalOpen}

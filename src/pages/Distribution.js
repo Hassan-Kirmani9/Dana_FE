@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useLocation, useHistory } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import { get, _delete } from '../api/axios';
 import {
   Table,
@@ -8,15 +8,13 @@ import {
   TableBody,
   TableRow,
   TableContainer,
-  Badge,
-  Button
 } from '@windmill/react-ui';
 import {
   AiOutlinePlusCircle,
   AiOutlineArrowLeft,
   AiOutlineDelete,
   AiOutlineEdit,
-  AiOutlineDown
+  AiOutlineDown,
 } from 'react-icons/ai';
 import CreateDistributionModal from './CreateDistributionModal';
 import EditDistributionModal from '../components/EditDistributionModal';
@@ -24,7 +22,6 @@ import toast from 'react-hot-toast';
 
 function Distribution() {
   const { id } = useParams();
-  const location = useLocation();
   const history = useHistory();
 
   const [distributionData, setDistributionData] = useState(null);
@@ -37,25 +34,7 @@ function Distribution() {
   const [expandedItem, setExpandedItem] = useState(null);
 
   useEffect(() => {
-    if (location.state?.featureData) {
-      setDistributionData(location.state.featureData);
-      setIsLoading(false);
-      return;
-    }
-
     fetchDistributionData();
-  }, [id, location.state]);
-
-  useEffect(() => {
-    const fetchMiqaatDetails = async () => {
-      try {
-        const response = await get(`/miqaat/${id}`);
-        setMiqaatDetails(response);
-      } catch (error) {
-        console.error('Error fetching miqaat details:', error);
-      }
-    };
-
     fetchMiqaatDetails();
   }, [id]);
 
@@ -64,13 +43,23 @@ function Distribution() {
     setError(null);
 
     try {
-      const response = await get(`/distribution/${id}`);
+      const response = await get(`/distribution/${id}/`);
       setDistributionData(response);
     } catch (err) {
       console.error('Error fetching distribution data:', err);
       setError('Failed to load distribution data. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchMiqaatDetails = async () => {
+    try {
+      const response = await get(`/miqaat/${id}/`);
+      setMiqaatDetails(response);
+    } catch (err) {
+      console.error('Error fetching miqaat details:', err);
+      // Don't set error state to avoid blocking UI
     }
   };
 
@@ -99,15 +88,12 @@ function Distribution() {
   const handleDeleteDistribution = async (distributionId) => {
     try {
       const confirmDelete = window.confirm('Are you sure you want to delete this distribution record?');
-
       if (confirmDelete) {
         await _delete(`/distribution/${distributionId}/`);
-
         setDistributionData(prevData => ({
           ...prevData,
-          distributions: prevData.distributions.filter(item => item.id !== distributionId)
+          distributions: prevData.distributions.filter(item => item.id !== distributionId),
         }));
-
         toast.success('Distribution record deleted successfully');
       }
     } catch (error) {
@@ -123,13 +109,18 @@ function Distribution() {
   const calculateTotals = () => {
     if (!distributionData?.distributions) return { total: 0, ibadullah: 0, mumin: 0 };
 
-    return distributionData.distributions.reduce((acc, item) => {
-      return {
-        total: acc.total + item.ibadullah_count + item.mumin_count,
-        ibadullah: acc.ibadullah + item.ibadullah_count,
-        mumin: acc.mumin + item.mumin_count
-      };
-    }, { total: 0, ibadullah: 0, mumin: 0 });
+    return distributionData.distributions.reduce(
+      (acc, item) => {
+        const ibadullah = item.ibadullah_count != null ? item.ibadullah_count : 0;
+        const mumin = item.mumin_count != null ? item.mumin_count : 0;
+        return {
+          total: acc.total + ibadullah + mumin,
+          ibadullah: acc.ibadullah + ibadullah,
+          mumin: acc.mumin + mumin,
+        };
+      },
+      { total: 0, ibadullah: 0, mumin: 0 }
+    );
   };
 
   const totals = calculateTotals();
@@ -137,21 +128,19 @@ function Distribution() {
   return (
     <div className="w-full px-4 py-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
-          <button
-            onClick={handleBackClick}
-            className="mr-4"
-          >
+          <button onClick={handleBackClick} className="mr-4">
             <AiOutlineArrowLeft className="w-5 h-5 dark:text-white" />
           </button>
           <h1
             style={{
               fontSize: window.innerWidth < 768 ? '1.25rem' : '1.5rem',
             }}
-            className='font-semibold dark:text-white'
+            className="font-semibold dark:text-white"
           >
             Distribution
+            {miqaatDetails && ` - ${miqaatDetails.miqaat_name}`}
           </h1>
         </div>
         <button
@@ -159,7 +148,7 @@ function Distribution() {
           className="flex items-center bg-purple-600 text-white rounded-lg"
           style={{
             fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem',
-            padding: window.innerWidth < 768 ? '0.5rem 1rem' : '0.75rem 1rem'
+            padding: window.innerWidth < 768 ? '0.5rem 1rem' : '0.75rem 1rem',
           }}
         >
           <AiOutlinePlusCircle
@@ -172,7 +161,7 @@ function Distribution() {
       {/* Loading State */}
       {isLoading ? (
         <div className="flex justify-center my-8">
-          <p className="text-gray-700">Loading data...</p>
+          <p className="text-gray-700 dark:text-gray-400">Loading data...</p>
         </div>
       ) : error ? (
         <div className="text-center py-8">
@@ -213,7 +202,6 @@ function Distribution() {
                     <TableCell>
                       <span className="text-sm">{item.quantity || 'N/A'}</span>
                     </TableCell>
-                    
                     <TableCell>
                       <span className="text-sm font-medium">
                         {item.ibadullah_count != null ? item.ibadullah_count : 'N/A'}
@@ -226,27 +214,26 @@ function Distribution() {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm font-bold">
-                        {item.ibadullah_count + item.mumin_count}
+                        {(item.ibadullah_count != null ? item.ibadullah_count : 0) +
+                          (item.mumin_count != null ? item.mumin_count : 0)}
                       </span>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">{item.zone_name || 'N/A'}</span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <button
-                          onClick={() => handleEditDistribution(item)}
-                          className="text-gray-600 hover:text-blue-600"
-                        >
-                          <AiOutlineEdit className="h-4 w-4 inline-block" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteDistribution(item.id)}
-                          className="text-gray-600 hover:text-red-600"
-                        >
-                          <AiOutlineDelete className="h-4 w-4 inline-block" />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleEditDistribution(item)}
+                        className="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-500 mr-2"
+                      >
+                        <AiOutlineEdit className="h-4 w-4 inline-block" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDistribution(item.id)}
+                        className="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500"
+                      >
+                        <AiOutlineDelete className="h-4 w-4 inline-block" />
+                      </button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -258,78 +245,83 @@ function Distribution() {
           <div className="md:hidden space-y-3">
             {!distributionData?.distributions || distributionData.distributions.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-700">No distribution records found</p>
+                <p className="text-gray-700 dark:text-gray-400">No distribution records found</p>
               </div>
             ) : (
               distributionData.distributions.map((item, index) => (
                 <div
                   key={item.id}
-                  className="bg-white rounded-lg shadow-md border"
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-md border dark:border-gray-700"
                 >
                   <div
                     className="flex items-center justify-between p-4 cursor-pointer"
                     onClick={() => toggleExpand(item.id)}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="bg-gray-100 h-8 w-8 rounded-full flex items-center justify-center text-gray-700 font-medium">
+                      <div className="bg-gray-100 dark:bg-gray-700 h-8 w-8 rounded-full flex items-center justify-center text-gray-700 dark:text-gray-300 font-medium">
                         {index + 1}
                       </div>
-                      <div className="font-medium">{item.menu_name || 'N/A'}</div>
+                      <div className="font-medium text-gray-800 dark:text-gray-200">{item.menu_name || 'N/A'}</div>
                     </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleExpand(item.id);
                       }}
-                      className="text-gray-600"
+                      className="text-gray-600 dark:text-gray-400"
                     >
-                      <AiOutlineDown className="h-4 w-4" />
+                      <AiOutlineDown
+                        className={`h-4 w-4 transition-transform ${expandedItem === item.id ? 'rotate-180' : ''}`}
+                      />
                     </button>
                   </div>
 
                   {expandedItem === item.id && (
-                    <div className="px-4 pb-4 pt-0 border-t">
+                    <div className="px-4 pb-4 pt-0 border-t dark:border-gray-700">
                       <div className="mt-2 space-y-2">
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Quantity:</p>
-                          <p className="text-sm">{item.quantity || 'N/A'}</p>
-                        </div>
-                       
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Ibadullah Count:</p>
-                          <p className="text-sm">{item.ibadullah_count != null ? item.ibadullah_count : 'N/A'}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Quantity:</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">{item.quantity || 'N/A'}</p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Mumin Count:</p>
-                          <p className="text-sm">{item.mumin_count != null ? item.mumin_count : 'N/A'}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Ibadullah Count:</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {item.ibadullah_count != null ? item.ibadullah_count : 'N/A'}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Total Count:</p>
-                          <p className="text-sm font-bold">{item.ibadullah_count + item.mumin_count}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Mumin Count:</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            {item.mumin_count != null ? item.mumin_count : 'N/A'}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-500 mb-1">Zone:</p>
-                          <p className="text-sm">{item.zone_name || 'N/A'}</p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Count:</p>
+                          <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
+                            {(item.ibadullah_count != null ? item.ibadullah_count : 0) +
+                              (item.mumin_count != null ? item.mumin_count : 0)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Zone:</p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">{item.zone_name || 'N/A'}</p>
                         </div>
                       </div>
-                      <div className="mt-4 flex justify-between items-center">
-                        <div className="flex-grow"></div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEditDistribution(item)}
-                            className="text-white px-4 py-1 rounded-md bg-blue-600 flex items-center"
-                          >
-                            <AiOutlineEdit className="h-4 w-4 mr-1" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteDistribution(item.id)}
-                            className="text-white px-4 py-1 rounded-md bg-red-600 flex items-center"
-                          >
-                            <AiOutlineDelete className="h-4 w-4 mr-1" />
-                            Delete
-                          </button>
-                        </div>
+                      <div className="mt-4 flex justify-end space-x-2">
+                        <button
+                          onClick={() => handleEditDistribution(item)}
+                          className="text-white px-4 py-1 rounded-md bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 flex items-center"
+                        >
+                          <AiOutlineEdit className="h-4 w-4 mr-1" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDistribution(item.id)}
+                          className="text-white px-4 py-1 rounded-md bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 flex items-center"
+                        >
+                          <AiOutlineDelete className="h-4 w-4 mr-1" />
+                          Delete
+                        </button>
                       </div>
                     </div>
                   )}
@@ -337,18 +329,21 @@ function Distribution() {
               ))
             )}
           </div>
+
+        
         </>
       )}
 
-      {/* Create Distribution Modal */}
-      <CreateDistributionModal
-        isOpen={isCreateModalOpen}
-        onClose={handleCreateModalClose}
-        miqaatId={id}
-        onSuccess={fetchDistributionData}
-      />
+      {/* Modals */}
+      {isCreateModalOpen && (
+        <CreateDistributionModal
+          isOpen={isCreateModalOpen}
+          onClose={handleCreateModalClose}
+          miqaatId={id}
+          onSuccess={fetchDistributionData}
+        />
+      )}
 
-      {/* Edit Distribution Modal */}
       {isEditModalOpen && currentDistribution && (
         <EditDistributionModal
           isOpen={isEditModalOpen}
