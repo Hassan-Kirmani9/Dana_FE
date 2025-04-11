@@ -9,7 +9,7 @@
     "prestart": "npm run tailwind:dev",
     "start": "react-scripts start",
     "prebuild": "npm run tailwind:build",
-    "build": "react-scripts build",
+    "build": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts build",
     "cz": "git-cz",
     "release": "release-it",
     "test": "react-scripts test",
