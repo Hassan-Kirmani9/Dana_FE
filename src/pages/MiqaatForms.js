@@ -12,7 +12,8 @@ function Forms() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const preselectedMiqaatType = queryParams.get('miqaat_type');
-  
+  const miqaatType = queryParams.get('miqaat_type');
+
   const [formData, setFormData] = useState({
     miqaat_name: '',
     miqaat_date: '',
@@ -88,7 +89,7 @@ function Forms() {
 
     return `${currentDay} ${monthNames[currentMonth - 1]} ${currentYear}`;
   };
-  
+
   // Update hijri_date automatically when miqaat_date changes
   useEffect(() => {
     if (formData.miqaat_date) {
@@ -99,7 +100,7 @@ function Forms() {
       }));
     }
   }, [formData.miqaat_date]);
-  
+
   // Function to get user-friendly filter name
   const getMiqaatTypeDisplayName = (filterValue) => {
     switch (filterValue) {
@@ -113,6 +114,19 @@ function Forms() {
         return filterValue;
     }
   };
+  const getPageTitle = () => {
+    switch (miqaatType) {
+      case 'general_miqaats':
+        return 'Create General Miqaat';
+      case 'ramadan':
+        return 'Create Ramadan';
+      case 'private_events':
+        return 'Create Private Event';
+      default:
+        return 'Miqaats';
+    }
+  };
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -152,10 +166,10 @@ function Forms() {
 
       // Submit the form
       const response = await post('/miqaat/', submissionData);
-      
+
       // Show success toast
       toast.success('Miqaat created successfully');
-      
+
       // Optionally redirect or reset form
       history.push(`/miqaat-menu/${response.id}`);
     } catch (err) {
@@ -168,27 +182,26 @@ function Forms() {
 
   return (
     <>
-      <PageTitle>Create Miqaat</PageTitle>
-      
+      <PageTitle>{getPageTitle()}</PageTitle>
+
       <form onSubmit={handleSubmit}>
-        <SectionTitle>Miqaat Details</SectionTitle>
         <div className="px-4 py-3 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800">
           <Label>
             <span>Miqaat Name</span>
-            <Input 
-              className="mt-1" 
+            <Input
+              className="mt-1"
               name="miqaat_name"
               value={formData.miqaat_name}
               onChange={handleChange}
-              placeholder="Enter miqaat name" 
+              placeholder="Enter miqaat name"
               required
             />
           </Label>
 
           <Label className="mt-4">
             <span>Miqaat Date</span>
-            <Input 
-              type="date" 
+            <Input
+              type="date"
               className="mt-1"
               name="miqaat_date"
               value={formData.miqaat_date}
@@ -199,13 +212,13 @@ function Forms() {
 
           <Label className="mt-4">
             <span>Hijri Date</span>
-            <Input 
+            <Input
               className="mt-1"
               name="hijri_date"
               value={formData.hijri_date}
               readOnly
               disabled
-              placeholder="Automatically calculated from Miqaat Date" 
+              placeholder="Automatically calculated from Miqaat Date"
             />
             <HelperText>This field is automatically calculated from the Miqaat Date</HelperText>
           </Label>
@@ -219,7 +232,7 @@ function Forms() {
               </div>
             ) : (
               // Otherwise, show dropdown for selection
-              <Select 
+              <Select
                 className="mt-1"
                 name="miqaat_type"
                 value={formData.miqaat_type}
@@ -232,31 +245,31 @@ function Forms() {
               </Select>
             )}
             {preselectedMiqaatType && (
-              <input 
-                type="hidden" 
-                name="miqaat_type" 
-                value={preselectedMiqaatType} 
+              <input
+                type="hidden"
+                name="miqaat_type"
+                value={preselectedMiqaatType}
               />
             )}
           </Label>
 
           <Label className="mt-4">
             <span>Description</span>
-            <Textarea 
-              className="mt-1" 
-              rows="3" 
+            <Textarea
+              className="mt-1"
+              rows="3"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              placeholder="Enter miqaat description" 
+              placeholder="Enter miqaat description"
             />
           </Label>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <Label>
               <span>Thaals Polled</span>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 className="mt-1"
                 name="thaals_polled"
                 value={formData.thaals_polled}
@@ -267,8 +280,8 @@ function Forms() {
 
             <Label>
               <span>Thaals Cooked</span>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 className="mt-1"
                 name="thaals_cooked"
                 value={formData.thaals_cooked}
@@ -279,8 +292,8 @@ function Forms() {
 
             <Label>
               <span>Thaals Served</span>
-              <Input 
-                type="number" 
+              <Input
+                type="number"
                 className="mt-1"
                 name="thaals_served"
                 value={formData.thaals_served}
@@ -292,8 +305,8 @@ function Forms() {
         </div>
 
         <div className="flex justify-end">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Creating...' : 'Create Miqaat'}

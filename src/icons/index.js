@@ -28,7 +28,7 @@ import { ReactComponent as OutlineCogIcon } from './outlineCog.svg'
 import { ReactComponent as OutlineLogoutIcon } from './outlineLogout.svg'
 import { ReactComponent as HandShake } from './illustration-of-handshake-svgrepo-com.svg'
 import { ReactComponent as Scale } from './scale-svgrepo-com.svg'
-import { ReactComponent as ZoneLocation } from './locations-route-svgrepo-com.svg'
+import { ReactComponent as ZoneLocation } from './location-pin-svgrepo-com.svg'
 
 export {
   ButtonsIcon,

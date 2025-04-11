@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useHistory } from 'react-router-dom'
+import toast from 'react-hot-toast'
 
 import ImageLight from '../assets/img/create-account-office.jpeg'
 import ImageDark from '../assets/img/create-account-office-dark.jpeg'
@@ -67,16 +68,35 @@ function Signup() {
       
       console.log("Sending signup request with payload:", payload);
       
-      
       const response = await post('/signup/', payload);
       
       console.log('Signup successful:', response);
-      alert('Account created successfully!');
       
+      toast.success('Account created successfully!', {
+        duration: 4000, 
+        position: 'top-right',
+        style: {
+          background: '#4CAF50',
+          color: 'white',
+        },
+      });
       
       history.push('/login');
     } catch (err) {
       console.error('Signup error:', err);
+            toast.error(
+        err.response?.data?.message || 
+        'Failed to create account. Please try again.',
+        {
+          duration: 4000,
+          position: 'top-right',
+          style: {
+            background: '#FF5252',
+            color: 'white',
+          },
+        }
+      );
+      
       setError(
         err.response?.data?.message || 
         'Failed to create account. Please try again.'
@@ -86,7 +106,6 @@ function Signup() {
     }
   };
 
-  
   console.log("Post function available:", typeof post === 'function');
 
   return (
