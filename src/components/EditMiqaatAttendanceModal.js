@@ -208,8 +208,9 @@ const EditMiqaatAttendanceModal = ({
                 value={formData.counter}
                 onChange={handleInputChange}
                 className="mt-1"
+                required
               >
-                <option value="" required>Select Counter</option>
+                <option value="">Select Counter</option>
                 {dropdownOptions.counters.map(counter => (
                   <option key={counter.id} value={counter.id}>
                     {counter.name || `Counter #${counter.id}`}
