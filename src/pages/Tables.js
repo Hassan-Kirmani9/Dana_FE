@@ -1,187 +1,164 @@
-import React, { useState, useEffect, useRef } from "react"
-import { useLocation, useHistory } from "react-router-dom"
-import { FaEdit, FaTrash, FaPlus, FaChevronLeft, FaChevronRight, FaTimes } from "react-icons/fa"
-import PageTitle from "../components/Typography/PageTitle"
-import { post, get, _delete } from "../api/axios"
-import toast from "react-hot-toast"
+import React, { useState, useEffect, useRef } from "react";
+import { useLocation, useHistory } from "react-router-dom";
+import { FaEdit, FaTrash, FaPlus, FaChevronLeft, FaChevronRight, FaTimes } from "react-icons/fa";
+import PageTitle from "../components/Typography/PageTitle";
+import { post, get, _delete } from "../api/axios";
+import toast from "react-hot-toast";
 
 function Tables() {
-  const location = useLocation()
-  const history = useHistory()
+  const location = useLocation();
+  const history = useHistory();
 
   // Get miqaat_type from URL query parameters
-  const queryParams = new URLSearchParams(location.search)
-  const miqaatType = queryParams.get('miqaat_type')
+  const queryParams = new URLSearchParams(location.search);
+  const miqaatType = queryParams.get('miqaat_type');
 
   // State for the table
-  const [currentPage, setCurrentPage] = useState(1)
-  const [tableData, setTableData] = useState([])
-  const [totalResults, setTotalResults] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isFeatureLoading, setIsFeatureLoading] = useState(false)
-  const [selectedEvent, setSelectedEvent] = useState(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [tableData, setTableData] = useState([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Using refs to prevent infinite loops
-  const prevMiqaatTypeRef = useRef()
-  const fetchingRef = useRef(false)
-  const initialRenderRef = useRef(true)
+  const prevMiqaatTypeRef = useRef();
+  const fetchingRef = useRef(false);
+  const initialRenderRef = useRef(true);
 
   // Pagination setup
-  const resultsPerPage = 10
+  const resultsPerPage = 10;
 
   const getPageTitle = () => {
     switch (miqaatType) {
       case 'general_miqaats':
-        return 'General Miqaats'
+        return 'General Miqaats';
       case 'ramadan':
-        return 'Ramadan'
+        return 'Ramadan';
       case 'private_events':
-        return 'Private Events'
+        return 'Private Events';
       default:
-        return 'Miqaats'
+        return 'Miqaats';
     }
-  }
+  };
 
   const fetchMiqaatData = async (page, type) => {
-    if (fetchingRef.current) return
+    if (fetchingRef.current) return;
 
-    fetchingRef.current = true
-    setIsLoading(true)
+    fetchingRef.current = true;
+    setIsLoading(true);
 
     try {
-      let url = '/miqaat/filter/'
+      let url = '/miqaat/filter/';
       if (type) {
-        url += `?miqaat_type=${type}`
+        url += `?miqaat_type=${type}`;
       }
 
-      const response = await get(url)
+      const response = await get(url);
 
       if (response && Array.isArray(response)) {
-        setTableData(response.slice((page - 1) * resultsPerPage, page * resultsPerPage))
-        setTotalResults(response.length)
+        setTableData(response.slice((page - 1) * resultsPerPage, page * resultsPerPage));
+        setTotalResults(response.length);
       } else {
-        console.error('Unexpected response format:', response)
-        setTableData([])
-        setTotalResults(0)
+        console.error('Unexpected response format:', response);
+        setTableData([]);
+        setTotalResults(0);
       }
     } catch (error) {
-      console.error('Error fetching miqaat data:', error)
-      setTableData([])
-      setTotalResults(0)
+      console.error('Error fetching miqaat data:', error);
+      setTableData([]);
+      setTotalResults(0);
     } finally {
-      setIsLoading(false)
-      fetchingRef.current = false
+      setIsLoading(false);
+      fetchingRef.current = false;
     }
-  }
+  };
 
   // Only run on mount and when miqaatType changes
   useEffect(() => {
-    const shouldFetch = initialRenderRef.current ||
-      prevMiqaatTypeRef.current !== miqaatType
+    const shouldFetch = initialRenderRef.current || prevMiqaatTypeRef.current !== miqaatType;
 
     if (shouldFetch && !fetchingRef.current) {
-      initialRenderRef.current = false
+      initialRenderRef.current = false;
 
       if (prevMiqaatTypeRef.current !== miqaatType) {
-        setCurrentPage(1)
+        setCurrentPage(1);
       }
 
-      prevMiqaatTypeRef.current = miqaatType
+      prevMiqaatTypeRef.current = miqaatType;
 
       setTimeout(() => {
-        fetchMiqaatData(1, miqaatType)
-      }, 0)
+        fetchMiqaatData(1, miqaatType);
+      }, 0);
     }
-  }, [miqaatType])
+  }, [miqaatType]);
 
   // Handle page changes initiated by the user
   const onPageChange = (p) => {
     if (p !== currentPage && !fetchingRef.current) {
-      setCurrentPage(p)
+      setCurrentPage(p);
       setTimeout(() => {
-        fetchMiqaatData(p, miqaatType)
-      }, 0)
+        fetchMiqaatData(p, miqaatType);
+      }, 0);
     }
-  }
+  };
 
   // Modified to pass the miqaat_type to the form
   const handleCreateClick = () => {
     if (miqaatType) {
-      history.push(`/app/forms?miqaat_type=${miqaatType}`)
+      history.push(`/app/forms?miqaat_type=${miqaatType}`);
     } else {
-      history.push("/app/forms")
+      history.push("/app/forms");
     }
-  }
+  };
 
-  const handleFeatureClick = async (featureType, miqaatId) => {
-    try {
-      let endpoint = '';
-      let navigationPath = '';
-  
-      switch (featureType) {
-        case 'miqaat-menu':
-          endpoint = `/miqaat-menu/${miqaatId}`;
-          navigationPath = `/app/miqaat-menu/${miqaatId}`;
-          break;
-        case 'miqaat-attendance':
-          endpoint = `/miqaat-attendance/${miqaatId}`;
-          navigationPath = `/app/miqaat-attendance/${miqaatId}`;
-          break;
-        case 'counter-packing':
-          endpoint = `/counter-packing/${miqaatId}`;
-          navigationPath = `/app/counter-packing/${miqaatId}`;
-          break;
-        case 'distribution':
-          endpoint = `/distribution/${miqaatId}`;
-          navigationPath = `/app/distribution/${miqaatId}`;
-          break;
-        case 'leftover-degs':
-          endpoint = `/leftover-degs/${miqaatId}`;
-          navigationPath = `/app/leftover-degs/${miqaatId}`;
-          break;
-        default:
-          console.error('Unknown feature type:', featureType);
-          return;
-      }
-  
-      // Navigate immediately
-      history.push(navigationPath);
-  
-      // Show loading and fetch data
-      setIsFeatureLoading(true);
-      const response = await get(endpoint);
-      if (response) {
-        // Store data in localStorage for MiqaatMenu to retrieve
-        localStorage.setItem(`featureData-${miqaatId}-${featureType}`, JSON.stringify(response));
-      }
-    } catch (error) {
-      console.error(`Error fetching ${featureType} data for ID ${miqaatId}:`, error);
-      toast.error(`Failed to load ${featureType} data`);
-    } finally {
-      setIsFeatureLoading(false);
+  const handleFeatureClick = (featureType, miqaatId) => {
+    let navigationPath = '';
+
+    switch (featureType) {
+      case 'miqaat-menu':
+        navigationPath = `/app/miqaat-menu/${miqaatId}`;
+        break;
+      case 'miqaat-attendance':
+        navigationPath = `/app/miqaat-attendance/${miqaatId}`;
+        break;
+      case 'counter-packing':
+        navigationPath = `/app/counter-packing/${miqaatId}`;
+        break;
+      case 'distribution':
+        navigationPath = `/app/distribution/${miqaatId}`;
+        break;
+      case 'leftover-degs':
+        navigationPath = `/app/leftover-degs/${miqaatId}`;
+        break;
+      default:
+        console.error('Unknown feature type:', featureType);
+        return;
     }
+
+    // Navigate to the feature page
+    history.push(navigationPath);
   };
 
   const handleDeleteMiqaat = async (id) => {
     try {
-      const confirmDelete = window.confirm('Are you sure you want to delete this Miqaat?')
+      const confirmDelete = window.confirm('Are you sure you want to delete this Miqaat?');
 
       if (confirmDelete) {
-        const res = await _delete(`/miqaat/${id}/`)
-        setTableData(prevData => prevData.filter(item => item.id !== id))
-        toast.success('Miqaat deleted successfully')
+        const res = await _delete(`/miqaat/${id}/`);
+        setTableData(prevData => prevData.filter(item => item.id !== id));
+        toast.success('Miqaat deleted successfully');
       }
     } catch (error) {
-      console.error('Error deleting Miqaat:', error)
-      alert('Failed to delete Miqaat. Please try again.')
+      console.error('Error deleting Miqaat:', error);
+      alert('Failed to delete Miqaat. Please try again.');
     }
-  }
+  };
 
   const handleRowClick = (event) => {
-    setSelectedEvent(event)
-    setIsDialogOpen(true)
-  }
+    setSelectedEvent(event);
+    setIsDialogOpen(true);
+  };
 
   const getFeatureColor = (feature) => {
     const colorMap = {
@@ -190,13 +167,13 @@ function Tables() {
       "Counter Packing": "bg-yellow-500",
       "Distribution": "bg-purple-500",
       "Leftover Degs": "bg-teal-500"
-    }
-    return colorMap[feature] || "bg-gray-500"
-  }
+    };
+    return colorMap[feature] || "bg-gray-500";
+  };
 
   // Pagination calculations
-  const totalPages = Math.ceil(tableData.length / resultsPerPage)
-  const startIndex = (currentPage - 1) * resultsPerPage
+  const totalPages = Math.ceil(tableData.length / resultsPerPage);
+  const startIndex = (currentPage - 1) * resultsPerPage;
 
   return (
     <div className="w-full px-4 py-6">
@@ -223,7 +200,7 @@ function Tables() {
       ) : (
         <>
           {/* Desktop Table - Hidden on mobile */}
-          <div className="hidden md:block overflow-x-auto rounded-lg ">
+          <div className="hidden md:block overflow-x-auto rounded-lg">
             <table className="w-full dark:bg-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
@@ -235,14 +212,14 @@ function Tables() {
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y dark:bg-gray-800 ">
+              <tbody className="divide-y dark:bg-gray-800">
                 {tableData.map((event, index) => (
                   <tr key={event.id} className="bg-white">
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800  dark:text-gray-400 ">{startIndex + index + 1}</td>
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800  dark:text-gray-400 font-medium">{event.miqaat_name}</td>
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800  dark:text-gray-400">{new Date(event.miqaat_date).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800  dark:text-gray-400">{event.hijri_date}</td>
-                    <td className="px-4 py-3 dark:bg-gray-800 ">
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:text-gray-400">{startIndex + index + 1}</td>
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:text-gray-400 font-medium">{event.miqaat_name}</td>
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:text-gray-400">{new Date(event.miqaat_date).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:text-gray-400">{event.hijri_date}</td>
+                    <td className="px-4 py-3 dark:bg-gray-800">
                       <div className="flex items-center space-x-1">
                         {[
                           { name: 'Menu', type: 'miqaat-menu' },
@@ -261,7 +238,7 @@ function Tables() {
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3 dark:bg-gray-800 ">
+                    <td className="px-4 py-3 dark:bg-gray-800">
                       <div className="flex items-center gap-2">
                         <button
                           className="text-gray-600 dark:text-gray-400 hover:text-blue-600"
@@ -288,7 +265,7 @@ function Tables() {
             {tableData.map((event) => (
               <div
                 key={event.id}
-                className="bg-white rounded-lg shadow-md "
+                className="bg-white rounded-lg shadow-md"
                 onClick={() => handleRowClick(event)}
               >
                 <div className="grid grid-cols-3 p-4 cursor-pointer">
@@ -306,8 +283,8 @@ function Tables() {
                       <button
                         className="text-gray-600 hover:text-blue-600"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          history.push(`/app/edit-miqaat/${event.id}`)
+                          e.stopPropagation();
+                          history.push(`/app/edit-miqaat/${event.id}`);
                         }}
                       >
                         <FaEdit className="h-4 w-4" />
@@ -315,8 +292,8 @@ function Tables() {
                       <button
                         className="text-gray-600 hover:text-red-600"
                         onClick={(e) => {
-                          e.stopPropagation()
-                          handleDeleteMiqaat(event.id)
+                          e.stopPropagation();
+                          handleDeleteMiqaat(event.id);
                         }}
                       >
                         <FaTrash className="h-4 w-4" />
@@ -395,7 +372,7 @@ function Tables() {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-4 ">Features</p>
+                <p className="text-sm text-gray-500 mb-4">Features</p>
                 <div className="grid grid-cols-2 gap-4">
                   {[
                     { name: 'Menu', type: 'miqaat-menu', color: 'bg-blue-500' },
@@ -418,30 +395,8 @@ function Tables() {
           </div>
         </div>
       )}
-
-      {/* Feature Loading Overlay */}
-      {isFeatureLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div
-            style={{
-              border: '4px solid #e6e6fa',
-              borderTop: '4px solid #8a2be2',
-              borderRadius: '50%',
-              width: '50px',
-              height: '50px',
-              animation: 'spin 1s linear infinite'
-            }}
-          />
-          <style jsx>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
-      )}
     </div>
-  )
+  );
 }
 
-export default Tables
+export default Tables;
