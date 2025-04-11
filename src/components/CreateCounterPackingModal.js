@@ -270,15 +270,7 @@ const CreateCounterPackingModal = ({
 
                 {/* Mobile buttons */}
                 <div className="w-full sm:hidden">
-                    <Button
-                        block
-                        size="large"
-                        layout="outline"
-                        onClick={onClose}
-                        className="mb-4"
-                    >
-                        Cancel
-                    </Button>
+               
                     <Button
                         block
                         size="large"

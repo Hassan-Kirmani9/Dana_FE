@@ -7,65 +7,59 @@ import {
   Button,
   Input,
   Label,
-  Select,
-  HelperText
+  Select
 } from '@windmill/react-ui';
 import { get, patch } from '../api/axios';
 import toast from 'react-hot-toast';
 
-const EditMiqaatAttendanceModal = ({ 
+const EditDistributionModal = ({ 
   isOpen, 
   onClose, 
   miqaatId, 
-  attendanceData,
+  distributionData,
   onSuccess 
 }) => {
   const [formData, setFormData] = useState({
     miqaat: miqaatId,
     zone: '',
-    member: '',
-    counter: '',
-    checkin_time: '',
-    checkout_time: ''
+    counter_packing: '',
+    ibadullah_count: '',
+    mumin_count: ''
   });
 
   const [dropdownOptions, setDropdownOptions] = useState({
     zones: [],
-    members: [],
-    counters: []
+    counter_packings: []
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Initialize form data when attendance data changes
+  // Initialize form data when distribution data changes
   useEffect(() => {
-    if (attendanceData) {
+    if (distributionData) {
       setFormData({
         miqaat: miqaatId,
-        zone: attendanceData.zone ? attendanceData.zone.id : '',
-        member: attendanceData.member ? attendanceData.member.id : '',
-        counter: attendanceData.counter ? attendanceData.counter.id : '',
-        checkin_time: attendanceData.checkin_time || '',
-        checkout_time: attendanceData.checkout_time || ''
+        zone: distributionData.zone ? distributionData.zone.id : '',
+        counter_packing: distributionData.counter_packing ? distributionData.counter_packing.id : '',
+        ibadullah_count: distributionData.ibadullah_count || '',
+        mumin_count: distributionData.mumin_count || ''
       });
     }
-  }, [attendanceData, miqaatId]);
+  }, [distributionData, miqaatId]);
   
   // Fetch dropdown options
   useEffect(() => {
     const fetchDropdownOptions = async () => {
       try {
-        const [zonesRes, membersRes, countersRes] = await Promise.all([
+        const [zonesRes, counterPackingsRes] = await Promise.all([
           get('/zone/list/'),
-          get('/member/list/'),
-          get('/counter/list/')
+          get(`/counter-packing/${miqaatId}`)
         ]);
 
         setDropdownOptions({
           zones: zonesRes,
-          members: membersRes,
-          counters: countersRes
+          counter_packings: counterPackingsRes.counter_packing
         });
       } catch (err) {
         console.error('Error fetching dropdown options:', err);
@@ -76,7 +70,7 @@ const EditMiqaatAttendanceModal = ({
     if (isOpen) {
       fetchDropdownOptions();
     }
-  }, [isOpen]);
+  }, [isOpen, miqaatId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -86,16 +80,6 @@ const EditMiqaatAttendanceModal = ({
     }));
   };
 
-  const validateTimes = (checkin, checkout) => {
-    if (!checkin || !checkout) return true; 
-    
-    const today = new Date().toISOString().split('T')[0]; 
-    const checkinDate = new Date(`${today}T${checkin}`);
-    const checkoutDate = new Date(`${today}T${checkout}`);
-    
-    return true;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -103,18 +87,11 @@ const EditMiqaatAttendanceModal = ({
 
     try {
       // Validate required fields
-      const requiredFields = ['zone', 'member', 'checkin_time', 'checkout_time'];
+      const requiredFields = ['zone', 'counter_packing', 'ibadullah_count', 'mumin_count'];
       const missingFields = requiredFields.filter(field => !formData[field]);
       
       if (missingFields.length > 0) {
         setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Validate time range
-      if (!validateTimes(formData.checkin_time, formData.checkout_time)) {
-        setError('Invalid time range');
         setIsSubmitting(false);
         return;
       }
@@ -124,19 +101,16 @@ const EditMiqaatAttendanceModal = ({
         ...formData,
         miqaat: parseInt(miqaatId),
         zone: parseInt(formData.zone),
-        member: parseInt(formData.member)
+        counter_packing: parseInt(formData.counter_packing),
+        ibadullah_count: parseInt(formData.ibadullah_count),
+        mumin_count: parseInt(formData.mumin_count)
       };
-      
-      // Add counter only if selected
-      if (formData.counter) {
-        submissionData.counter = parseInt(formData.counter);
-      }
 
       // Submit the form
-      await patch(`/miqaat-attendance/${attendanceData.id}/`, submissionData);
+      await patch(`/distribution/${distributionData.id}/`, submissionData);
       
       // Show success toast
-      toast.success('Attendance record updated successfully');
+      toast.success('Distribution record updated successfully');
       
       // Call success callback
       onSuccess();
@@ -144,8 +118,8 @@ const EditMiqaatAttendanceModal = ({
       // Close the modal
       onClose();
     } catch (err) {
-      console.error('Error updating attendance record:', err);
-      setError(err.response?.data?.message || 'Failed to update attendance record');
+      console.error('Error updating distribution record:', err);
+      setError(err.response?.data?.message || 'Failed to update distribution record');
     } finally {
       setIsSubmitting(false);
     }
@@ -153,7 +127,7 @@ const EditMiqaatAttendanceModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalHeader>Edit Attendance Record</ModalHeader>
+      <ModalHeader>Edit Distribution Record</ModalHeader>
       <ModalBody>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -162,28 +136,9 @@ const EditMiqaatAttendanceModal = ({
         )}
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Member Dropdown */}
-            <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Member</span>
-              <Select
-                name="member"
-                value={formData.member}
-                onChange={handleInputChange}
-                className="mt-1"
-                required
-              >
-                <option value="">Select Member</option>
-                {dropdownOptions.members.map(member => (
-                  <option key={member.id} value={member.id}>
-                    {member.full_name || member.its || `Member #${member.id}`}
-                  </option>
-                ))}
-              </Select>
-            </Label>
-
             {/* Zone Dropdown */}
             <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Zone</span>
+              <span className="text-gray-700 dark:text-gray-400">Zone *</span>
               <Select
                 name="zone"
                 value={formData.zone}
@@ -200,58 +155,59 @@ const EditMiqaatAttendanceModal = ({
               </Select>
             </Label>
 
-            {/* Counter Dropdown */}
+            {/* Counter Packing Dropdown */}
             <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Counter</span>
+              <span className="text-gray-700 dark:text-gray-400">Counter Packing *</span>
               <Select
-                name="counter"
-                value={formData.counter}
+                name="counter_packing"
+                value={formData.counter_packing}
                 onChange={handleInputChange}
                 className="mt-1"
                 required
               >
-                <option value="">Select Counter</option>
-                {dropdownOptions.counters.map(counter => (
-                  <option key={counter.id} value={counter.id}>
-                    {counter.name || `Counter #${counter.id}`}
+                <option value="">Select Counter Packing</option>
+                {dropdownOptions.counter_packings.map(counterPacking => (
+                  <option key={counterPacking.id} value={counterPacking.id}>
+                    {`${counterPacking.menu_name} - ${counterPacking.zone_name}`}
                   </option>
                 ))}
               </Select>
             </Label>
 
-            {/* Check-in Time */}
+            {/* Ibadullah Count Input */}
             <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Check-in Time</span>
-              <Input
-                type="time"
-                name="checkin_time"
-                value={formData.checkin_time}
+              <span className="text-gray-700 dark:text-gray-400">Ibadullah Count *</span>
+              <Input 
+                type="number"
+                name="ibadullah_count"
+                value={formData.ibadullah_count}
                 onChange={handleInputChange}
                 className="mt-1"
+                placeholder="Enter Ibadullah count"
+                min="0"
                 required
               />
             </Label>
 
-            {/* Check-out Time */}
-            <Label className="block text-sm col-span-1 md:col-span-2">
-              <span className="text-gray-700 dark:text-gray-400">Check-out Time</span>
-              <Input
-                type="time"
-                name="checkout_time"
-                value={formData.checkout_time}
+            {/* Mumin Count Input */}
+            <Label className="block text-sm">
+              <span className="text-gray-700 dark:text-gray-400">Mumin Count *</span>
+              <Input 
+                type="number"
+                name="mumin_count"
+                value={formData.mumin_count}
                 onChange={handleInputChange}
                 className="mt-1"
+                placeholder="Enter Mumin count"
+                min="0"
                 required
               />
-              <HelperText>
-                Check-out time can be before check-in time if spanning multiple days
-              </HelperText>
             </Label>
           </div>
         </form>
       </ModalBody>
       <ModalFooter>
-       
+     
         <div className="hidden sm:block">
           <Button 
             onClick={handleSubmit} 
@@ -263,7 +219,6 @@ const EditMiqaatAttendanceModal = ({
         
         {/* Mobile buttons */}
         <div className="w-full sm:hidden">
-       
           <Button 
             block 
             size="large" 
@@ -278,4 +233,4 @@ const EditMiqaatAttendanceModal = ({
   );
 };
 
-export default EditMiqaatAttendanceModal;
+export default EditDistributionModal;

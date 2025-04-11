@@ -113,9 +113,7 @@ function EditUnitModal({ isOpen, onClose, onUnitUpdated, unitData }) {
       </ModalBody>
       <ModalFooter>
         <div className="flex flex-col space-y-2 sm:space-y-0 sm:space-x-2 sm:flex-row">
-          <Button layout="outline" onClick={onClose}>
-            Cancel
-          </Button>
+        
           <Button 
             onClick={handleSubmit} 
             disabled={isSubmitting}

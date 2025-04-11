@@ -7,65 +7,69 @@ import {
   Button,
   Input,
   Label,
-  Select,
-  HelperText
+  Select
 } from '@windmill/react-ui';
 import { get, patch } from '../api/axios';
 import toast from 'react-hot-toast';
 
-const EditMiqaatAttendanceModal = ({ 
+const EditLeftoverDegsModal = ({ 
   isOpen, 
   onClose, 
   miqaatId, 
-  attendanceData,
+  leftoverDegsData,
   onSuccess 
 }) => {
   const [formData, setFormData] = useState({
     miqaat: miqaatId,
     zone: '',
-    member: '',
-    counter: '',
-    checkin_time: '',
-    checkout_time: ''
+    menu: '',
+    unit: '',
+    container: '',
+    total_cooked: '',
+    total_received: ''
   });
 
   const [dropdownOptions, setDropdownOptions] = useState({
     zones: [],
-    members: [],
-    counters: []
+    menus: [],
+    units: [],
+    containers: []
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Initialize form data when attendance data changes
+  // Initialize form data when leftover degs data changes
   useEffect(() => {
-    if (attendanceData) {
+    if (leftoverDegsData) {
       setFormData({
         miqaat: miqaatId,
-        zone: attendanceData.zone ? attendanceData.zone.id : '',
-        member: attendanceData.member ? attendanceData.member.id : '',
-        counter: attendanceData.counter ? attendanceData.counter.id : '',
-        checkin_time: attendanceData.checkin_time || '',
-        checkout_time: attendanceData.checkout_time || ''
+        zone: leftoverDegsData.zone ? leftoverDegsData.zone.id : '',
+        menu: leftoverDegsData.menu ? leftoverDegsData.menu.id : '',
+        unit: leftoverDegsData.unit ? leftoverDegsData.unit.id : '',
+        container: leftoverDegsData.container ? leftoverDegsData.container.id : '',
+        total_cooked: leftoverDegsData.total_cooked || '',
+        total_received: leftoverDegsData.total_received || ''
       });
     }
-  }, [attendanceData, miqaatId]);
+  }, [leftoverDegsData, miqaatId]);
   
   // Fetch dropdown options
   useEffect(() => {
     const fetchDropdownOptions = async () => {
       try {
-        const [zonesRes, membersRes, countersRes] = await Promise.all([
+        const [zonesRes, menusRes, unitsRes, containersRes] = await Promise.all([
           get('/zone/list/'),
-          get('/member/list/'),
-          get('/counter/list/')
+          get('/menu/list/'),
+          get('/unit/list/'),
+          get('/container/list/')
         ]);
 
         setDropdownOptions({
           zones: zonesRes,
-          members: membersRes,
-          counters: countersRes
+          menus: menusRes,
+          units: unitsRes,
+          containers: containersRes
         });
       } catch (err) {
         console.error('Error fetching dropdown options:', err);
@@ -86,16 +90,6 @@ const EditMiqaatAttendanceModal = ({
     }));
   };
 
-  const validateTimes = (checkin, checkout) => {
-    if (!checkin || !checkout) return true; 
-    
-    const today = new Date().toISOString().split('T')[0]; 
-    const checkinDate = new Date(`${today}T${checkin}`);
-    const checkoutDate = new Date(`${today}T${checkout}`);
-    
-    return true;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -103,18 +97,11 @@ const EditMiqaatAttendanceModal = ({
 
     try {
       // Validate required fields
-      const requiredFields = ['zone', 'member', 'counter', 'checkin_time', 'checkout_time'];
+      const requiredFields = ['zone', 'menu', 'unit', 'container', 'total_cooked', 'total_received'];
       const missingFields = requiredFields.filter(field => !formData[field]);
       
       if (missingFields.length > 0) {
         setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Validate time range
-      if (!validateTimes(formData.checkin_time, formData.checkout_time)) {
-        setError('Invalid time range');
         setIsSubmitting(false);
         return;
       }
@@ -124,15 +111,18 @@ const EditMiqaatAttendanceModal = ({
         ...formData,
         miqaat: parseInt(miqaatId),
         zone: parseInt(formData.zone),
-        member: parseInt(formData.member),
-        counter: parseInt(formData.counter)
+        menu: parseInt(formData.menu),
+        unit: parseInt(formData.unit),
+        container: parseInt(formData.container),
+        total_cooked: parseInt(formData.total_cooked),
+        total_received: parseInt(formData.total_received)
       };
 
       // Submit the form
-      await patch(`/miqaat-attendance/${attendanceData.id}/`, submissionData);
+      await patch(`/leftover-degs/${leftoverDegsData.id}/`, submissionData);
       
       // Show success toast
-      toast.success('Attendance record updated successfully');
+      toast.success('Leftover degs record updated successfully');
       
       // Call success callback
       onSuccess();
@@ -140,8 +130,8 @@ const EditMiqaatAttendanceModal = ({
       // Close the modal
       onClose();
     } catch (err) {
-      console.error('Error updating attendance record:', err);
-      setError(err.response?.data?.message || 'Failed to update attendance record');
+      console.error('Error updating leftover degs record:', err);
+      setError(err.response?.data?.message || 'Failed to update leftover degs record');
     } finally {
       setIsSubmitting(false);
     }
@@ -149,7 +139,7 @@ const EditMiqaatAttendanceModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalHeader>Edit Attendance Record</ModalHeader>
+      <ModalHeader>Edit Leftover Degs Record</ModalHeader>
       <ModalBody>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -158,25 +148,6 @@ const EditMiqaatAttendanceModal = ({
         )}
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Member Dropdown */}
-            <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Member *</span>
-              <Select
-                name="member"
-                value={formData.member}
-                onChange={handleInputChange}
-                className="mt-1"
-                required
-              >
-                <option value="">Select Member</option>
-                {dropdownOptions.members.map(member => (
-                  <option key={member.id} value={member.id}>
-                    {member.full_name || member.its || `Member #${member.id}`}
-                  </option>
-                ))}
-              </Select>
-            </Label>
-
             {/* Zone Dropdown */}
             <Label className="block text-sm">
               <span className="text-gray-700 dark:text-gray-400">Zone *</span>
@@ -196,59 +167,98 @@ const EditMiqaatAttendanceModal = ({
               </Select>
             </Label>
 
-            {/* Counter Dropdown */}
+            {/* Menu Dropdown */}
             <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Counter *</span>
+              <span className="text-gray-700 dark:text-gray-400">Menu *</span>
               <Select
-                name="counter"
-                value={formData.counter}
+                name="menu"
+                value={formData.menu}
                 onChange={handleInputChange}
                 className="mt-1"
                 required
               >
-                <option value="">Select Counter</option>
-                {dropdownOptions.counters.map(counter => (
-                  <option key={counter.id} value={counter.id}>
-                    {counter.name || `Counter #${counter.id}`}
+                <option value="">Select Menu</option>
+                {dropdownOptions.menus.map(menu => (
+                  <option key={menu.id} value={menu.id}>
+                    {menu.name}
                   </option>
                 ))}
               </Select>
             </Label>
 
-            {/* Check-in Time */}
+            {/* Unit Dropdown */}
             <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Check-in Time *</span>
-              <Input
-                type="time"
-                name="checkin_time"
-                value={formData.checkin_time}
+              <span className="text-gray-700 dark:text-gray-400">Unit *</span>
+              <Select
+                name="unit"
+                value={formData.unit}
                 onChange={handleInputChange}
                 className="mt-1"
+                required
+              >
+                <option value="">Select Unit</option>
+                {dropdownOptions.units.map(unit => (
+                  <option key={unit.id} value={unit.id}>
+                    {unit.name}
+                  </option>
+                ))}
+              </Select>
+            </Label>
+
+            {/* Container Dropdown */}
+            <Label className="block text-sm">
+              <span className="text-gray-700 dark:text-gray-400">Container *</span>
+              <Select
+                name="container"
+                value={formData.container}
+                onChange={handleInputChange}
+                className="mt-1"
+                required
+              >
+                <option value="">Select Container</option>
+                {dropdownOptions.containers.map(container => (
+                  <option key={container.id} value={container.id}>
+                    {container.name}
+                  </option>
+                ))}
+              </Select>
+            </Label>
+
+            {/* Total Cooked Input */}
+            <Label className="block text-sm">
+              <span className="text-gray-700 dark:text-gray-400">Total Cooked *</span>
+              <Input 
+                type="number"
+                name="total_cooked"
+                value={formData.total_cooked}
+                onChange={handleInputChange}
+                className="mt-1"
+                placeholder="Enter total cooked"
+                min="0"
                 required
               />
             </Label>
 
-            {/* Check-out Time */}
-            <Label className="block text-sm col-span-1 md:col-span-2">
-              <span className="text-gray-700 dark:text-gray-400">Check-out Time *</span>
-              <Input
-                type="time"
-                name="checkout_time"
-                value={formData.checkout_time}
+            {/* Total Received Input */}
+            <Label className="block text-sm">
+              <span className="text-gray-700 dark:text-gray-400">Total Received *</span>
+              <Input 
+                type="number"
+                name="total_received"
+                value={formData.total_received}
                 onChange={handleInputChange}
                 className="mt-1"
+                placeholder="Enter total received"
+                min="0"
                 required
               />
-              <HelperText>
-                Check-out time can be before check-in time if spanning multiple days
-              </HelperText>
             </Label>
           </div>
         </form>
       </ModalBody>
       <ModalFooter>
         <div className="hidden sm:block">
-         
+          
         </div>
         <div className="hidden sm:block">
           <Button 
@@ -261,7 +271,7 @@ const EditMiqaatAttendanceModal = ({
         
         {/* Mobile buttons */}
         <div className="w-full sm:hidden">
-    
+          
           <Button 
             block 
             size="large" 
@@ -276,4 +286,4 @@ const EditMiqaatAttendanceModal = ({
   );
 };
 
-export default EditMiqaatAttendanceModal;
+export default EditLeftoverDegsModal;

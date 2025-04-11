@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useHistory } from 'react-router-dom';
-import { get } from '../api/axios';
-import PageTitle from '../components/Typography/PageTitle';
-import SectionTitle from '../components/Typography/SectionTitle';
-import {
+import { get, _delete } from '../api/axios';
+import { 
   Table,
   TableHeader,
   TableCell,
   TableBody,
   TableRow,
   TableContainer,
-  Button,
+  Button 
 } from '@windmill/react-ui';
-import { AiOutlinePlusCircle, AiOutlineArrowLeft } from 'react-icons/ai';
+import { 
+  AiOutlinePlusCircle, 
+  AiOutlineArrowLeft, 
+  AiOutlineDelete,
+  AiOutlineEdit,
+  AiOutlineDown 
+} from 'react-icons/ai';
 import CreateLeftoverDegsModal from './CreateLeftoverDegsModal';
+import EditLeftoverDegsModal from '../components/EditLeftoverDegsModal';
+import toast from 'react-hot-toast';
 
 function LeftoverDegs() {
   const { id } = useParams();
@@ -24,21 +30,21 @@ function LeftoverDegs() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [miqaatDetails, setMiqaatDetails] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentLeftoverDeg, setCurrentLeftoverDeg] = useState(null);
+  const [expandedItem, setExpandedItem] = useState(null);
 
   useEffect(() => {
-    // Check if data was passed via location state
     if (location.state?.featureData) {
       setLeftoverData(location.state.featureData);
       setIsLoading(false);
       return;
     }
 
-    // Fetch data
     fetchLeftoverData();
   }, [id, location.state]);
 
-  // Fetch miqaat details
   useEffect(() => {
     const fetchMiqaatDetails = async () => {
       try {
@@ -57,12 +63,7 @@ function LeftoverDegs() {
     setError(null);
 
     try {
-      // Console log for debugging
-      console.log(`Fetching leftover degs data for miqaat ID: ${id}`);
-
-      // Fixed URL to match the correct endpoint
       const response = await get(`/leftover-degs/${id}`);
-      console.log('Leftover degs response:', response);
       setLeftoverData(response);
     } catch (err) {
       console.error('Error fetching leftover degs data:', err);
@@ -77,137 +78,260 @@ function LeftoverDegs() {
   };
 
   const handleAddLeftoverDeg = () => {
-    setIsModalOpen(true);
+    setIsCreateModalOpen(true);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
+  const handleCreateModalClose = () => {
+    setIsCreateModalOpen(false);
   };
 
-  const handleModalSuccess = (newData) => {
-    // Refresh the data after successful creation
-    fetchLeftoverData();
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+    setCurrentLeftoverDeg(null);
+  };
+
+  const handleEditLeftoverDeg = (leftoverDegItem) => {
+    setCurrentLeftoverDeg(leftoverDegItem);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteLeftoverDeg = async (leftoverDegId) => {
+    try {
+      const confirmDelete = window.confirm('Are you sure you want to delete this leftover degs record?');
+      
+      if (confirmDelete) {
+        await _delete(`/leftover-degs/${leftoverDegId}/`);
+        
+        setLeftoverData(prevData => ({
+          ...prevData,
+          leftover_degs: prevData.leftover_degs.filter(item => item.id !== leftoverDegId)
+        }));
+        
+        toast.success('Leftover degs record deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting leftover degs record:', error);
+      toast.error('Failed to delete leftover degs record. Please try again.');
+    }
+  };
+
+  const toggleExpand = (id) => {
+    setExpandedItem(expandedItem === id ? null : id);
   };
 
   return (
-    <>
-      <div className="flex items-center justify-between mt-6">
+    <div className="w-full px-4 py-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
-          <Button
-            layout="link"
+          <button 
             onClick={handleBackClick}
             className="mr-4"
           >
             <AiOutlineArrowLeft className="w-5 h-5" />
-          </Button>
+          </button>
           <h1
             style={{
               fontSize: window.innerWidth < 768 ? '1.25rem' : '1.5rem',
             }}
-            className='font-semibold dark:text-white'
+            className='font-semibold'
           >
             Leftover Degs
           </h1>
         </div>
-        <Button onClick={handleAddLeftoverDeg} className="flex items-center"
+        <button 
+          onClick={handleAddLeftoverDeg} 
+          className="flex items-center bg-purple-600 text-white rounded-lg"
           style={{
             fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem',
-            padding: window.innerWidth < 768 ? '0.5rem' : '0.75rem'
-          }}>
-          <AiOutlinePlusCircle className="w-4 h-4 mr-1" />
-          Add 
-        </Button>
+            padding: window.innerWidth < 768 ? '0.5rem 1rem' : '0.75rem 1rem'
+          }}
+        >
+          <AiOutlinePlusCircle 
+            className={`mr-1 ${window.innerWidth < 768 ? 'w-3 h-3' : 'w-4 h-4'}`} 
+          />
+          Add
+        </button>
       </div>
 
+      {/* Loading State */}
       {isLoading ? (
         <div className="flex justify-center my-8">
-          <div className="text-center">
-            <p className="text-gray-700 dark:text-gray-300">Loading data...</p>
-          </div>
+          <p className="text-gray-700">Loading data...</p>
         </div>
       ) : error ? (
         <div className="text-center py-8">
-          <p className="text-red-600 dark:text-red-400">{error}</p>
-          <Button onClick={fetchLeftoverData} className="mt-4">
+          <p className="text-red-600">{error}</p>
+          <button 
+            onClick={fetchLeftoverData} 
+            className="mt-4 bg-purple-600 text-white px-4 py-2 rounded"
+          >
             Retry
-          </Button>
+          </button>
         </div>
       ) : (
         <>
-          {/* Leftover Degs Table */}
-          <TableContainer className="mb-8 mt-10">
+          {/* Desktop Table - Hidden on mobile */}
+          <TableContainer className="hidden md:block mb-8">
+            <Table>
+              <TableHeader>
+                <tr>
+                  <TableCell>ID</TableCell>
+                  <TableCell>Menu</TableCell>
+                  <TableCell>Container</TableCell>
+                  <TableCell>Unit</TableCell>
+                  <TableCell>Total Cooked</TableCell>
+                  <TableCell>Total Received</TableCell>
+                  <TableCell>Zone</TableCell>
+                  <TableCell className="text-right">Actions</TableCell>
+                </tr>
+              </TableHeader>
+              <TableBody>
+                {leftoverData?.leftover_degs?.map((item, index) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <span className="text-sm">{index + 1}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm font-medium">{item.menu_name || 'N/A'}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{item.container_name || 'N/A'}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{item.unit_name || 'N/A'}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm font-medium">
+                        {item.total_cooked != null ? item.total_cooked : 'N/A'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm font-medium">
+                        {item.total_received != null ? item.total_received : 'N/A'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{item.zone_name || 'N/A'}</span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <button 
+                        onClick={() => handleDeleteLeftoverDeg(item.id)}
+                        className="text-gray-600 hover:text-red-600"
+                      >
+                        <AiOutlineDelete className="h-4 w-4 inline-block" />
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Mobile View - Card Based Layout */}
+          <div className="md:hidden space-y-3">
             {!leftoverData?.leftover_degs || leftoverData.leftover_degs.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-700 dark:text-gray-300">No leftover degs records found</p>
+                <p className="text-gray-700">No leftover degs records found</p>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <tr>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Menu</TableCell>
-                    <TableCell>Container</TableCell>
-                    <TableCell>Unit</TableCell>
-                    <TableCell>Total Cooked</TableCell>
-                    <TableCell>Total Received</TableCell>
-                    <TableCell>Zone</TableCell>
-                  </tr>
-                </TableHeader>
-                <TableBody>
-                  {leftoverData.leftover_degs.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <span className="text-sm font-semibold">
-                          {item.id}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">
-                          {item.menu_name || 'N/A'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">
-                          {item.container_name || 'N/A'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">
-                          {item.unit_name || 'N/A'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-medium">
-                          {item.total_cooked != null ? item.total_cooked : 'N/A'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-medium">
-                          {item.total_received != null ? item.total_received : 'N/A'}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">
-                          {item.zone_name || 'N/A'}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              leftoverData.leftover_degs.map((item, index) => (
+                <div 
+                  key={item.id} 
+                  className="bg-white rounded-lg shadow-md border"
+                >
+                  <div
+                    className="flex items-center justify-between p-4 cursor-pointer"
+                    onClick={() => toggleExpand(item.id)}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-gray-100 h-8 w-8 rounded-full flex items-center justify-center text-gray-700 font-medium">
+                        {index + 1}
+                      </div>
+                      <div className="font-medium">{item.menu_name || 'N/A'}</div>
+                    </div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleExpand(item.id);
+                      }}
+                      className="text-gray-600"
+                    >
+                      <AiOutlineDown className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {expandedItem === item.id && (
+                    <div className="px-4 pb-4 pt-0 border-t">
+                      <div className="mt-2 space-y-2">
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Container:</p>
+                          <p className="text-sm">{item.container_name || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Unit:</p>
+                          <p className="text-sm">{item.unit_name || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Total Cooked:</p>
+                          <p className="text-sm">{item.total_cooked != null ? item.total_cooked : 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Total Received:</p>
+                          <p className="text-sm">{item.total_received != null ? item.total_received : 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">Zone:</p>
+                          <p className="text-sm">{item.zone_name || 'N/A'}</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex justify-between items-center">
+                        <div className="flex-grow"></div>
+                        <div className="flex space-x-2">
+                          <button 
+                            onClick={() => handleEditLeftoverDeg(item)}
+                            className="text-white px-4 py-1 rounded-md bg-blue-600 flex items-center"
+                          >
+                            <AiOutlineEdit className="h-4 w-4 mr-1" />
+                            Edit
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteLeftoverDeg(item.id)}
+                            className="text-white px-4 py-1 rounded-md bg-red-600 flex items-center"
+                          >
+                            <AiOutlineDelete className="h-4 w-4 mr-1" />
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
             )}
-          </TableContainer>
+          </div>
         </>
       )}
 
       {/* Create Leftover Degs Modal */}
       <CreateLeftoverDegsModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
+        isOpen={isCreateModalOpen}
+        onClose={handleCreateModalClose}
         miqaatId={id}
-        onSuccess={handleModalSuccess}
+        onSuccess={fetchLeftoverData}
       />
-    </>
+
+      {/* Edit Leftover Degs Modal */}
+      {isEditModalOpen && currentLeftoverDeg && (
+        <EditLeftoverDegsModal
+          isOpen={isEditModalOpen}
+          onClose={handleEditModalClose}
+          miqaatId={id}
+          leftoverDegsData={currentLeftoverDeg}
+          onSuccess={fetchLeftoverData}
+        />
+      )}
+    </div>
   );
 }
 

@@ -289,13 +289,7 @@ const EditMiqaatForm = () => {
         </div>
 
         <div className="flex justify-end space-x-4">
-          <Button 
-            layout="outline"
-            type="button"
-            onClick={() => history.goBack()}
-          >
-            Cancel
-          </Button>
+     
           <Button 
             type="submit"
             disabled={isSubmitting}
