@@ -41,7 +41,7 @@ function MiqaatMenu() {
         setError(null);
 
         try {
-            const response = await get(`/miqaat-menu/${id}`);
+            const response = await get(`/miqaat-menu/${id}/`);
             setMenuData(response);
         } catch (err) {
             console.error('Error fetching menu data:', err);

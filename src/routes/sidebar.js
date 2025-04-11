@@ -37,6 +37,11 @@ const routes = [
     icon: 'Container1',
     name: 'Containers',
   },
+  {
+    path: '/app/counters',
+    icon: 'CardsIcon',
+    name: 'Counters',
+  },
 
 ]
 

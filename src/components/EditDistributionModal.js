@@ -12,12 +12,12 @@ import {
 import { get, patch } from '../api/axios';
 import toast from 'react-hot-toast';
 
-const EditDistributionModal = ({ 
-  isOpen, 
-  onClose, 
-  miqaatId, 
+const EditDistributionModal = ({
+  isOpen,
+  onClose,
+  miqaatId,
   distributionData,
-  onSuccess 
+  onSuccess
 }) => {
   const [formData, setFormData] = useState({
     miqaat: miqaatId,
@@ -47,7 +47,7 @@ const EditDistributionModal = ({
       });
     }
   }, [distributionData, miqaatId]);
-  
+
   // Fetch dropdown options
   useEffect(() => {
     const fetchDropdownOptions = async () => {
@@ -89,7 +89,7 @@ const EditDistributionModal = ({
       // Validate required fields
       const requiredFields = ['zone', 'counter_packing', 'ibadullah_count', 'mumin_count'];
       const missingFields = requiredFields.filter(field => !formData[field]);
-      
+
       if (missingFields.length > 0) {
         setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
         setIsSubmitting(false);
@@ -108,13 +108,13 @@ const EditDistributionModal = ({
 
       // Submit the form
       await patch(`/distribution/${distributionData.id}/`, submissionData);
-      
+
       // Show success toast
       toast.success('Distribution record updated successfully');
-      
+
       // Call success callback
       onSuccess();
-      
+
       // Close the modal
       onClose();
     } catch (err) {
@@ -155,29 +155,12 @@ const EditDistributionModal = ({
               </Select>
             </Label>
 
-            {/* Counter Packing Dropdown */}
-            <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Counter Packing *</span>
-              <Select
-                name="counter_packing"
-                value={formData.counter_packing}
-                onChange={handleInputChange}
-                className="mt-1"
-                required
-              >
-                <option value="">Select Counter Packing</option>
-                {dropdownOptions.counter_packings.map(counterPacking => (
-                  <option key={counterPacking.id} value={counterPacking.id}>
-                    {`${counterPacking.menu_name} - ${counterPacking.zone_name}`}
-                  </option>
-                ))}
-              </Select>
-            </Label>
+           
 
             {/* Ibadullah Count Input */}
             <Label className="block text-sm">
               <span className="text-gray-700 dark:text-gray-400">Ibadullah Count *</span>
-              <Input 
+              <Input
                 type="number"
                 name="ibadullah_count"
                 value={formData.ibadullah_count}
@@ -192,7 +175,7 @@ const EditDistributionModal = ({
             {/* Mumin Count Input */}
             <Label className="block text-sm">
               <span className="text-gray-700 dark:text-gray-400">Mumin Count *</span>
-              <Input 
+              <Input
                 type="number"
                 name="mumin_count"
                 value={formData.mumin_count}
@@ -204,24 +187,42 @@ const EditDistributionModal = ({
               />
             </Label>
           </div>
+           {/* Counter Packing Dropdown */}
+           <Label className="block text-sm">
+              <span className="text-gray-700 dark:text-gray-400">Counter Packing *</span>
+              <Select
+                name="counter_packing"
+                value={formData.counter_packing}
+                onChange={handleInputChange}
+                className="mt-1"
+                required
+              >
+                <option value="">Select Counter Packing</option>
+                {dropdownOptions.counter_packings.map(counterPacking => (
+                  <option key={counterPacking.id} value={counterPacking.id}>
+                    Zone Name: {counterPacking.zone_name},  Quantity: {counterPacking.quantity} (Fill: {counterPacking.filled_percentage}%)
+                  </option>
+                ))}
+              </Select>
+            </Label>
         </form>
       </ModalBody>
       <ModalFooter>
-     
+
         <div className="hidden sm:block">
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Updating...' : 'Update'}
           </Button>
         </div>
-        
+
         {/* Mobile buttons */}
         <div className="w-full sm:hidden">
-          <Button 
-            block 
-            size="large" 
+          <Button
+            block
+            size="large"
             onClick={handleSubmit}
             disabled={isSubmitting}
           >

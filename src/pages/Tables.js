@@ -114,56 +114,54 @@ function Tables() {
     }
   }
 
-  // Handle fetching data from feature-specific endpoints and navigating
   const handleFeatureClick = async (featureType, miqaatId) => {
     try {
-      setIsFeatureLoading(true)
-
-      let endpoint = ''
-      let navigationPath = ''
-
+      let endpoint = '';
+      let navigationPath = '';
+  
       switch (featureType) {
         case 'miqaat-menu':
-          endpoint = `/miqaat-menu/${miqaatId}`
-          navigationPath = `/app/miqaat-menu/${miqaatId}`
-          break
+          endpoint = `/miqaat-menu/${miqaatId}`;
+          navigationPath = `/app/miqaat-menu/${miqaatId}`;
+          break;
         case 'miqaat-attendance':
-          endpoint = `/miqaat-attendance/${miqaatId}`
-          navigationPath = `/app/miqaat-attendance/${miqaatId}`
-          break
+          endpoint = `/miqaat-attendance/${miqaatId}`;
+          navigationPath = `/app/miqaat-attendance/${miqaatId}`;
+          break;
         case 'counter-packing':
-          endpoint = `/counter-packing/${miqaatId}`
-          navigationPath = `/app/counter-packing/${miqaatId}`
-          break
+          endpoint = `/counter-packing/${miqaatId}`;
+          navigationPath = `/app/counter-packing/${miqaatId}`;
+          break;
         case 'distribution':
-          endpoint = `/distribution/${miqaatId}`
-          navigationPath = `/app/distribution/${miqaatId}`
-          break
+          endpoint = `/distribution/${miqaatId}`;
+          navigationPath = `/app/distribution/${miqaatId}`;
+          break;
         case 'leftover-degs':
-          endpoint = `/leftover-degs/${miqaatId}`
-          navigationPath = `/app/leftover-degs/${miqaatId}`
-          break
+          endpoint = `/leftover-degs/${miqaatId}`;
+          navigationPath = `/app/leftover-degs/${miqaatId}`;
+          break;
         default:
-          console.error('Unknown feature type:', featureType)
-          setIsFeatureLoading(false)
-          return
+          console.error('Unknown feature type:', featureType);
+          return;
       }
-
-      const response = await get(endpoint)
-
+  
+      // Navigate immediately
+      history.push(navigationPath);
+  
+      // Show loading and fetch data
+      setIsFeatureLoading(true);
+      const response = await get(endpoint);
       if (response) {
-        history.push({
-          pathname: navigationPath,
-          state: { featureData: response }
-        })
+        // Store data in localStorage for MiqaatMenu to retrieve
+        localStorage.setItem(`featureData-${miqaatId}-${featureType}`, JSON.stringify(response));
       }
     } catch (error) {
-      console.error(`Error fetching ${featureType} data for ID ${miqaatId}:`, error)
-      toast.error(`Failed to load ${featureType} data`)
+      console.error(`Error fetching ${featureType} data for ID ${miqaatId}:`, error);
+      toast.error(`Failed to load ${featureType} data`);
     } finally {
-      setIsFeatureLoading(false)
+      setIsFeatureLoading(false);
     }
-  }
+  };
 
   const handleDeleteMiqaat = async (id) => {
     try {
@@ -225,9 +223,9 @@ function Tables() {
       ) : (
         <>
           {/* Desktop Table - Hidden on mobile */}
-          <div className="hidden md:block overflow-x-auto rounded-lg border">
+          <div className="hidden md:block overflow-x-auto rounded-lg ">
             <table className="w-full dark:bg-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-800 dark:border-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">SNO.</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">MIQAAT NAME</th>
@@ -237,14 +235,14 @@ function Tables() {
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">ACTIONS</th>
                 </tr>
               </thead>
-              <tbody className="divide-y dark:bg-gray-800 dark:border-gray-50">
+              <tbody className="divide-y dark:bg-gray-800 ">
                 {tableData.map((event, index) => (
                   <tr key={event.id} className="bg-white">
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:border-gray-50 dark:text-gray-400 ">{startIndex + index + 1}</td>
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:border-gray-50 dark:text-gray-400 font-medium">{event.miqaat_name}</td>
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:border-gray-50 dark:text-gray-400">{new Date(event.miqaat_date).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:border-gray-50 dark:text-gray-400">{event.hijri_date}</td>
-                    <td className="px-4 py-3 dark:bg-gray-800 dark:border-gray-50">
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800  dark:text-gray-400 ">{startIndex + index + 1}</td>
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800  dark:text-gray-400 font-medium">{event.miqaat_name}</td>
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800  dark:text-gray-400">{new Date(event.miqaat_date).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-sm dark:bg-gray-800  dark:text-gray-400">{event.hijri_date}</td>
+                    <td className="px-4 py-3 dark:bg-gray-800 ">
                       <div className="flex items-center space-x-1">
                         {[
                           { name: 'Menu', type: 'miqaat-menu' },
@@ -263,7 +261,7 @@ function Tables() {
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3 dark:bg-gray-800 dark:border-gray-50">
+                    <td className="px-4 py-3 dark:bg-gray-800 ">
                       <div className="flex items-center gap-2">
                         <button
                           className="text-gray-600 dark:text-gray-400 hover:text-blue-600"
@@ -290,7 +288,7 @@ function Tables() {
             {tableData.map((event) => (
               <div
                 key={event.id}
-                className="bg-white rounded-lg shadow-md border"
+                className="bg-white rounded-lg shadow-md "
                 onClick={() => handleRowClick(event)}
               >
                 <div className="grid grid-cols-3 p-4 cursor-pointer">
@@ -362,7 +360,7 @@ function Tables() {
       {isDialogOpen && selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg w-11/12 max-w-md max-h-[90vh] overflow-auto">
-            <div className="flex justify-between items-center p-4 border-b">
+            <div className="flex justify-between items-center p-4">
               <h2 className="text-xl font-semibold">{selectedEvent.miqaat_name} - Features</h2>
               <button
                 className="text-gray-600 hover:text-gray-800"

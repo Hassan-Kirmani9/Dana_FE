@@ -60,7 +60,7 @@ const EditCounterPackingModal = ({
       try {
         const [zonesRes, miqaatMenusRes, unitsRes, containersRes] = await Promise.all([
           get('/zone/list/'),
-          get(`/miqaat-menu/${miqaatId}`),
+          get(`/miqaat-menu/${miqaatId}/`),
           get('/unit/list/'),
           get('/container/list/')
         ]);
