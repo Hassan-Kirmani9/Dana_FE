@@ -103,11 +103,19 @@ const EditMiqaatAttendanceModal = ({
 
     try {
       // Validate required fields
-      const requiredFields = ['zone', 'member', 'checkin_time', 'checkout_time'];
+      const requiredFields = ['zone', 'member', 'counter', 'checkin_time', 'checkout_time'];
       const missingFields = requiredFields.filter(field => !formData[field]);
       
       if (missingFields.length > 0) {
         setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate that counter is a valid integer
+      const counterValue = parseInt(formData.counter, 10);
+      if (isNaN(counterValue) || counterValue <= 0) {
+        setError('Please select a valid counter');
         setIsSubmitting(false);
         return;
       }
@@ -124,13 +132,9 @@ const EditMiqaatAttendanceModal = ({
         ...formData,
         miqaat: parseInt(miqaatId),
         zone: parseInt(formData.zone),
-        member: parseInt(formData.member)
+        member: parseInt(formData.member),
+        counter: counterValue 
       };
-      
-      // Add counter only if selected
-      if (formData.counter) {
-        submissionData.counter = parseInt(formData.counter);
-      }
 
       // Submit the form
       await patch(`/miqaat-attendance/${attendanceData.id}/`, submissionData);
@@ -164,7 +168,7 @@ const EditMiqaatAttendanceModal = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Member Dropdown */}
             <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Member</span>
+              <span className="text-gray-700 dark:text-gray-400">Member *</span>
               <Select
                 name="member"
                 value={formData.member}
@@ -183,7 +187,7 @@ const EditMiqaatAttendanceModal = ({
 
             {/* Zone Dropdown */}
             <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Zone</span>
+              <span className="text-gray-700 dark:text-gray-400">Zone *</span>
               <Select
                 name="zone"
                 value={formData.zone}
@@ -202,7 +206,7 @@ const EditMiqaatAttendanceModal = ({
 
             {/* Counter Dropdown */}
             <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Counter</span>
+              <span className="text-gray-700 dark:text-gray-400">Counter *</span>
               <Select
                 name="counter"
                 value={formData.counter}
@@ -221,7 +225,7 @@ const EditMiqaatAttendanceModal = ({
 
             {/* Check-in Time */}
             <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Check-in Time</span>
+              <span className="text-gray-700 dark:text-gray-400">Check-in Time *</span>
               <Input
                 type="time"
                 name="checkin_time"
@@ -234,7 +238,7 @@ const EditMiqaatAttendanceModal = ({
 
             {/* Check-out Time */}
             <Label className="block text-sm col-span-1 md:col-span-2">
-              <span className="text-gray-700 dark:text-gray-400">Check-out Time</span>
+              <span className="text-gray-700 dark:text-gray-400">Check-out Time *</span>
               <Input
                 type="time"
                 name="checkout_time"

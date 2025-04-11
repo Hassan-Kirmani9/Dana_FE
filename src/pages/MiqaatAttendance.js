@@ -13,7 +13,7 @@ import {
   Badge,
   Button,
 } from '@windmill/react-ui';
-import { AiOutlinePlusCircle, AiOutlineArrowLeft, AiOutlineDelete, AiOutlineDown } from 'react-icons/ai';
+import { AiOutlinePlusCircle, AiOutlineArrowLeft, AiOutlineDelete, AiOutlineDown, AiOutlineEdit } from 'react-icons/ai';
 import { EditIcon, TrashIcon } from '../icons';
 import CreateMiqaatAttendanceModal from '../components/CreateMiqaatAttendanceModal';
 import EditMiqaatAttendanceModal from '../components/EditMiqaatAttendanceModal';
@@ -139,13 +139,13 @@ function MiqaatAttendance() {
             onClick={handleBackClick}
             className="mr-4"
           >
-            <AiOutlineArrowLeft className="w-5 h-5" />
+            <AiOutlineArrowLeft className="w-5 h-5 dark:text-white" />
           </button>
           <h1
             style={{
               fontSize: window.innerWidth < 768 ? '1.25rem' : '1.5rem',
             }}
-            className='font-semibold'
+            className='font-semibold dark:text-white'
           >
             Attendance
             {miqaatDetails && ` - ${miqaatDetails.miqaat_name}`}
@@ -219,6 +219,12 @@ function MiqaatAttendance() {
                       <span className="text-sm">{item.counter_name || 'N/A'}</span>
                     </TableCell>
                     <TableCell className="text-right">
+                      <button 
+                        onClick={() => handleEditAttendance(item)}
+                        className="text-gray-600 hover:text-blue-600"
+                      >
+                        <AiOutlineEdit className="h-4 w-4 inline-block" />
+                      </button>
                       <button 
                         onClick={() => handleDeleteAttendance(item.id)}
                         className="text-gray-600 hover:text-red-600"

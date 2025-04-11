@@ -143,13 +143,13 @@ function Distribution() {
             onClick={handleBackClick}
             className="mr-4"
           >
-            <AiOutlineArrowLeft className="w-5 h-5" />
+            <AiOutlineArrowLeft className="w-5 h-5 dark:text-white" />
           </button>
           <h1
             style={{
               fontSize: window.innerWidth < 768 ? '1.25rem' : '1.5rem',
             }}
-            className='font-semibold'
+            className='font-semibold dark:text-white'
           >
             Distribution
           </h1>

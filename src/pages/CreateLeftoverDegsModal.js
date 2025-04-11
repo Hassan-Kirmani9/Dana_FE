@@ -165,6 +165,7 @@ const CreateLeftoverDegsModal = ({
                 value={formData.menu}
                 onChange={handleInputChange}
                 className="mt-1"
+                required
               >
                 <option value="">Select Menu</option>
                 {dropdownOptions.menus.map(menu => (
@@ -183,6 +184,7 @@ const CreateLeftoverDegsModal = ({
                 value={formData.unit}
                 onChange={handleInputChange}
                 className="mt-1"
+                required
               >
                 <option value="">Select Unit</option>
                 {dropdownOptions.units.map(unit => (
@@ -201,6 +203,7 @@ const CreateLeftoverDegsModal = ({
                 value={formData.container}
                 onChange={handleInputChange}
                 className="mt-1"
+                required
               >
                 <option value="">Select Container</option>
                 {dropdownOptions.containers.map(container => (
@@ -219,6 +222,7 @@ const CreateLeftoverDegsModal = ({
                 value={formData.zone}
                 onChange={handleInputChange}
                 className="mt-1"
+                required
               >
                 <option value="">Select Zone</option>
                 {dropdownOptions.zones.map(zone => (
@@ -239,6 +243,7 @@ const CreateLeftoverDegsModal = ({
                 onChange={handleInputChange}
                 placeholder="Enter total cooked"
                 className="mt-1"
+                required
               />
             </Label>
 
@@ -252,6 +257,7 @@ const CreateLeftoverDegsModal = ({
                 onChange={handleInputChange}
                 placeholder="Enter total received"
                 className="mt-1"
+                required
               />
             </Label>
           </div>

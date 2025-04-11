@@ -10,14 +10,13 @@ import {
   Select,
   HelperText
 } from '@windmill/react-ui';
-import { get, patch } from '../api/axios';
+import { get, post } from '../api/axios';
 import toast from 'react-hot-toast';
 
-const EditMiqaatAttendanceModal = ({ 
+const CreateMiqaatAttendanceModal = ({ 
   isOpen, 
   onClose, 
   miqaatId, 
-  attendanceData,
   onSuccess 
 }) => {
   const [formData, setFormData] = useState({
@@ -38,21 +37,7 @@ const EditMiqaatAttendanceModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Initialize form data when attendance data changes
-  useEffect(() => {
-    if (attendanceData) {
-      setFormData({
-        miqaat: miqaatId,
-        zone: attendanceData.zone ? attendanceData.zone.id : '',
-        member: attendanceData.member ? attendanceData.member.id : '',
-        counter: attendanceData.counter ? attendanceData.counter.id : '',
-        checkin_time: attendanceData.checkin_time || '',
-        checkout_time: attendanceData.checkout_time || ''
-      });
-    }
-  }, [attendanceData, miqaatId]);
-  
-  // Fetch dropdown options
+  // Fetch dropdown options when modal opens
   useEffect(() => {
     const fetchDropdownOptions = async () => {
       try {
@@ -129,19 +114,19 @@ const EditMiqaatAttendanceModal = ({
       };
 
       // Submit the form
-      await patch(`/miqaat-attendance/${attendanceData.id}/`, submissionData);
+      const response = await post('/miqaat-attendance/', submissionData);
       
       // Show success toast
-      toast.success('Attendance record updated successfully');
+      toast.success('Attendance record created successfully');
       
       // Call success callback
-      onSuccess();
+      onSuccess(response);
       
       // Close the modal
       onClose();
     } catch (err) {
-      console.error('Error updating attendance record:', err);
-      setError(err.response?.data?.message || 'Failed to update attendance record');
+      console.error('Error creating attendance record:', err);
+      setError(err.response?.data?.message || 'Failed to create attendance record');
     } finally {
       setIsSubmitting(false);
     }
@@ -149,7 +134,7 @@ const EditMiqaatAttendanceModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalHeader>Edit Attendance Record</ModalHeader>
+      <ModalHeader>Add Attendance Record</ModalHeader>
       <ModalBody>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -248,27 +233,37 @@ const EditMiqaatAttendanceModal = ({
       </ModalBody>
       <ModalFooter>
         <div className="hidden sm:block">
-         
+          <Button layout="outline" onClick={onClose}>
+            Cancel
+          </Button>
         </div>
         <div className="hidden sm:block">
           <Button 
             onClick={handleSubmit} 
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Updating...' : 'Update'}
+            {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         </div>
         
         {/* Mobile buttons */}
         <div className="w-full sm:hidden">
-    
+          <Button 
+            block 
+            size="large" 
+            layout="outline" 
+            onClick={onClose}
+            className="mb-4"
+          >
+            Cancel
+          </Button>
           <Button 
             block 
             size="large" 
             onClick={handleSubmit}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Updating...' : 'Update'}
+            {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         </div>
       </ModalFooter>
@@ -276,4 +271,4 @@ const EditMiqaatAttendanceModal = ({
   );
 };
 
-export default EditMiqaatAttendanceModal;
+export default CreateMiqaatAttendanceModal;
