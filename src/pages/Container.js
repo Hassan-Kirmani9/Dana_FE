@@ -9,44 +9,43 @@ import {
     TableBody,
     TableRow,
     TableContainer,
-    Button,
-    Badge,
+    Button
 } from '@windmill/react-ui';
 import { AiOutlinePlusCircle } from 'react-icons/ai';
 import { EditIcon, TrashIcon } from '../icons';
-import CreateMemberModal from '../components/CreateMemberModal';
-import EditMemberModal from '../components/EditMemberModal';
+import CreateContainerModal from '../components/CreateContainerModal';
+import EditContainerModal from '../components/EditContainerModal';
 import toast from 'react-hot-toast';
 
-function Member() {
+function Container() {
     const history = useHistory();
 
-    const [memberData, setMemberData] = useState([]);
+    const [containerData, setContainerData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [currentMember, setCurrentMember] = useState(null);
+    const [currentContainer, setCurrentContainer] = useState(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     useEffect(() => {
-        const fetchMemberData = async () => {
+        const fetchContainerData = async () => {
             try {
                 setIsLoading(true);
-                const response = await get('/member/list/');
-                setMemberData(response);
+                const response = await get('/container/list/');
+                setContainerData(response);
             } catch (err) {
-                console.error('Error fetching member data:', err);
-                setError('Failed to load member data');
+                console.error('Error fetching container data:', err);
+                setError('Failed to load container data');
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchMemberData();
+        fetchContainerData();
     }, [refreshTrigger]);
 
-    const handleAddMember = () => {
+    const handleAddContainer = () => {
         setIsCreateModalOpen(true);
     };
 
@@ -54,52 +53,52 @@ function Member() {
         setIsCreateModalOpen(false);
     };
 
-    const handleEditClick = (member) => {
-        setCurrentMember(member);
+    const handleEditClick = (container) => {
+        setCurrentContainer(container);
         setIsEditModalOpen(true);
     };
 
     const handleEditModalClose = () => {
         setIsEditModalOpen(false);
-        setCurrentMember(null);
+        setCurrentContainer(null);
     };
 
-    const handleMemberCreated = () => {
+    const handleContainerCreated = () => {
         setRefreshTrigger(prev => prev + 1);
-        toast.success('Member created successfully');
+        toast.success('Container created successfully');
     };
 
-    const handleMemberUpdated = () => {
+    const handleContainerUpdated = () => {
         setRefreshTrigger(prev => prev + 1);
-        toast.success('Member updated successfully');
+        toast.success('Container updated successfully');
     };
 
-    const handleDeleteMember = async (id) => {
+    const handleDeleteContainer = async (id) => {
         try {
             // Confirm deletion
-            const confirmDelete = window.confirm('Are you sure you want to delete this member?');
+            const confirmDelete = window.confirm('Are you sure you want to delete this container?');
 
             if (confirmDelete) {
                 // Perform delete operation
-                await _delete(`/member/${id}/`);
+                await _delete(`/container/${id}/`);
 
-                // Update the member data by removing the deleted item
-                setMemberData(prevData => prevData.filter(item => item.id !== id));
-                toast.success('Member deleted successfully');
+                // Update the container data by removing the deleted item
+                setContainerData(prevData => prevData.filter(item => item.id !== id));
+                toast.success('Container deleted successfully');
             }
         } catch (error) {
-            console.error('Error deleting member:', error);
-            toast.error('Failed to delete member. Please try again.');
+            console.error('Error deleting container:', error);
+            toast.error('Failed to delete container. Please try again.');
         }
     };
 
     return (
         <>
             <div className="flex items-center justify-between mb-6">
-                <PageTitle>Members</PageTitle>
-                <Button onClick={handleAddMember} className="flex items-center">
+                <PageTitle>Containers</PageTitle>
+                <Button onClick={handleAddContainer} className="flex items-center">
                     <AiOutlinePlusCircle className="w-4 h-4 mr-1" />
-                    Add Member
+                    Add Container
                 </Button>
             </div>
 
@@ -115,41 +114,27 @@ function Member() {
                 </div>
             ) : (
                 <TableContainer className="mb-8">
-                    {memberData.length === 0 ? (
+                    {containerData.length === 0 ? (
                         <div className="text-center py-8">
-                            <p className="text-gray-700 dark:text-gray-300">No members found</p>
+                            <p className="text-gray-700 dark:text-gray-300">No containers found</p>
                         </div>
                     ) : (
                         <Table>
                             <TableHeader>
                                 <tr>
-                                    <TableCell>ITS</TableCell>
-                                    <TableCell>Full Name</TableCell>
-                                    
-                                    <TableCell>Contact</TableCell>
-                                    <TableCell>WhatsApp</TableCell>
-                                    <TableCell>Mohalla</TableCell>
+                                    <TableCell>ID</TableCell>
+                                    <TableCell>Name</TableCell>
                                     <TableCell>Actions</TableCell>
                                 </tr>
                             </TableHeader>
                             <TableBody>
-                                {memberData.map((item) => (
+                                {containerData.map((item) => (
                                     <TableRow key={item.id}>
                                         <TableCell>
-                                            <span className="text-sm font-semibold">{item.its}</span>
+                                            <span className="text-sm font-semibold">{item.id}</span>
                                         </TableCell>
                                         <TableCell>
-                                            <span className="text-sm">{item.full_name}</span>
-                                        </TableCell>
-                                       
-                                        <TableCell>
-                                            <span className="text-sm">{item.contact_number || 'N/A'}</span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="text-sm">{item.whatsapp_number || 'N/A'}</span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="text-sm">{item.mohalla || 'N/A'}</span>
+                                            <span className="text-sm">{item.name}</span>
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex items-center space-x-4">
@@ -165,7 +150,7 @@ function Member() {
                                                     layout="link"
                                                     size="icon"
                                                     aria-label="Delete"
-                                                    onClick={() => handleDeleteMember(item.id)}
+                                                    onClick={() => handleDeleteContainer(item.id)}
                                                 >
                                                     <TrashIcon className="w-5 h-5" aria-hidden="true" />
                                                 </Button>
@@ -179,24 +164,24 @@ function Member() {
                 </TableContainer>
             )}
 
-            {/* Create Member Modal */}
-            <CreateMemberModal
+            {/* Create Container Modal */}
+            <CreateContainerModal
                 isOpen={isCreateModalOpen}
                 onClose={handleCreateModalClose}
-                onMemberCreated={handleMemberCreated}
+                onContainerCreated={handleContainerCreated}
             />
 
-            {/* Edit Member Modal */}
-            {currentMember && (
-                <EditMemberModal
+            {/* Edit Container Modal */}
+            {currentContainer && (
+                <EditContainerModal
                     isOpen={isEditModalOpen}
                     onClose={handleEditModalClose}
-                    onMemberUpdated={handleMemberUpdated}
-                    memberData={currentMember}
+                    onContainerUpdated={handleContainerUpdated}
+                    containerData={currentContainer}
                 />
             )}
         </>
     );
 }
 
-export default Member;
+export default Container;

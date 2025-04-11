@@ -7,6 +7,7 @@ const EditMiqaatForm = lazy(() => import('../pages/EditMiqaatForm'))
 const Member = lazy(() => import('../pages/Member'))
 const Units = lazy(() => import('../pages/Units'))
 const Zones = lazy(() => import('../pages/Zone'))
+const Containers = lazy(() => import('../pages/Container'))
 const Buttons = lazy(() => import('../pages/Buttons'))
 const Modals = lazy(() => import('../pages/Modals'))
 const Tables = lazy(() => import('../pages/Tables'))
@@ -44,6 +45,10 @@ const routes = [
   {
     path: '/zones',
     component: Zones,
+  },
+  {
+    path: '/containers',
+    component: Containers,
   },
   {
     path: '/modals',

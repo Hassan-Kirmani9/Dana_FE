@@ -29,6 +29,8 @@ import { ReactComponent as OutlineLogoutIcon } from './outlineLogout.svg'
 import { ReactComponent as HandShake } from './illustration-of-handshake-svgrepo-com.svg'
 import { ReactComponent as Scale } from './scale-svgrepo-com.svg'
 import { ReactComponent as ZoneLocation } from './location-pin-svgrepo-com.svg'
+import { ReactComponent as Container1 } from './container-svgrepo-com.svg'
+import { ReactComponent as Container2 } from './filled-box-svgrepo-com.svg'
 
 export {
   ButtonsIcon,
@@ -36,6 +38,8 @@ export {
   ChartsIcon,
   FormsIcon,
   HandShake,
+  Container1,
+  Container2,
   HomeIcon,
   Scale,
   ZoneLocation,

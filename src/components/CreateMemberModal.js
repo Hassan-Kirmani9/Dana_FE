@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Modal,
   ModalHeader,
@@ -7,58 +7,27 @@ import {
   Button,
   Input,
   Label,
-  Select,
   Textarea
 } from '@windmill/react-ui';
-import { post, get } from '../api/axios';
+import { post } from '../api/axios';
+import toast from 'react-hot-toast';
 
-function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
+function CreateMemberModal({ 
+  isOpen, 
+  onClose, 
+  onMemberCreated 
+}) {
   const [formData, setFormData] = useState({
     its: '',
     full_name: '',
-    zone: '',
-    miqaat: '',
     contact_number: '',
     whatsapp_number: '',
     email_address: '',
-    mohalla: '',
-    counter:''
+    mohalla: ''
   });
 
-  const [zones, setZones] = useState([]);
-  const [miqaats, setMiqaats] = useState([]);
-  const [counters, setCounters] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
-  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
-
-  // Fetch zones and miqaats data when the modal opens
-  useEffect(() => {
-    if (isOpen) {
-      fetchOptionsData();
-    }
-  }, [isOpen]);
-
-  const fetchOptionsData = async () => {
-    setIsLoadingOptions(true);
-    try {
-      // Fetch zones data
-      const zonesResponse = await get('/zone/list/');
-      setZones(zonesResponse);
-
-      // Fetch miqaats data
-      const miqaatsResponse = await get('/miqaat/list/');
-      setMiqaats(miqaatsResponse);
-
-      // Fetch counters data
-      const countersResponse = await get('/counter/list/');
-      setCounters(countersResponse);
-    } catch (error) {
-      console.error('Error fetching options data:', error);
-    } finally {
-      setIsLoadingOptions(false);
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -70,35 +39,35 @@ function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
 
   const validateForm = () => {
     const newErrors = {};
-
+    
     if (!formData.its.trim()) {
       newErrors.its = 'ITS is required';
     } else if (formData.its.length > 8) {
       newErrors.its = 'ITS cannot exceed 8 characters';
     }
-
+    
     if (!formData.full_name.trim()) {
       newErrors.full_name = 'Full name is required';
     }
-
+    
     if (formData.email_address && !/^\S+@\S+\.\S+$/.test(formData.email_address)) {
       newErrors.email_address = 'Invalid email format';
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       return;
     }
 
     try {
       setIsSubmitting(true);
-
+      
       // Prepare data for submission
       const dataToSubmit = {
         ...formData,
@@ -106,34 +75,17 @@ function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
         contact_number: formData.contact_number || null,
         whatsapp_number: formData.whatsapp_number || null,
         email_address: formData.email_address || null,
-        mohalla: formData.mohalla || null,
-        // Convert empty strings to null for foreign keys
-        zone: formData.zone || null,
-        miqaat: formData.miqaat || null,
-        counter: formData.counter || null
+        mohalla: formData.mohalla || null
       };
-
+      
       // Send POST request to create member
-      await post('/member/', dataToSubmit);
-
-      // Reset form
-      setFormData({
-        its: '',
-        full_name: '',
-        zone: '',
-        miqaat: '',
-        contact_number: '',
-        whatsapp_number: '',
-        email_address: '',
-        mohalla: '',
-        counter:''
-      });
-
+      const response = await post('/member/', dataToSubmit);
+      
       // Call the callback to refresh the member list
       if (onMemberCreated) {
         onMemberCreated();
       }
-
+      
       // Close the modal
       onClose();
     } catch (error) {
@@ -143,28 +95,6 @@ function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
       setIsSubmitting(false);
     }
   };
-
-  const resetForm = () => {
-    setFormData({
-      its: '',
-      full_name: '',
-      zone: '',
-      miqaat: '',
-      contact_number: '',
-      whatsapp_number: '',
-      email_address: '',
-      mohalla: '',
-      counter: ''
-    });
-    setErrors({});
-  };
-
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      resetForm();
-    }
-  }, [isOpen]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -189,12 +119,12 @@ function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
                 )}
               </Label>
             </div>
-
+            
             {/* Full Name */}
             <div className="mb-4">
               <Label>
                 <span>Full Name *</span>
-                <Input
+                <Input 
                   className="mt-1"
                   name="full_name"
                   value={formData.full_name}
@@ -207,72 +137,11 @@ function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
               </Label>
             </div>
 
-            {/* Zone */}
-            <div className="mb-4">
-              <Label>
-                <span>Zone</span>
-                <Select
-                  className="mt-1"
-                  name="zone"
-                  value={formData.zone}
-                  onChange={handleChange}
-                  disabled={isLoadingOptions}
-                >
-                  <option value="">Select Zone</option>
-                  {zones.map((zone) => (
-                    <option key={zone.id} value={zone.id}>
-                      {zone.name}
-                    </option>
-                  ))}
-                </Select>
-              </Label>
-            </div>
-            {/* Counter */}
-            <div className="mb-4">
-              <Label>
-                <span>Counter (Optional)</span>
-                <Select
-                  className="mt-1"
-                  name="counter"
-                  value={formData.counter}
-                  onChange={handleChange}
-                  disabled={isLoadingOptions}
-                >
-                  <option value="">Select counter</option>
-                  {counters.map((counter) => (
-                    <option key={counter.id} value={counter.id}>
-                      {counter.name}
-                    </option>
-                  ))}
-                </Select>
-              </Label>
-            </div>
-            {/* Miqaat */}
-            <div className="mb-4">
-              <Label>
-                <span>Miqaat</span>
-                <Select
-                  className="mt-1"
-                  name="miqaat"
-                  value={formData.miqaat}
-                  onChange={handleChange}
-                  disabled={isLoadingOptions}
-                >
-                  <option value="">Select Miqaat</option>
-                  {miqaats.map((miqaat) => (
-                    <option key={miqaat.id} value={miqaat.id}>
-                      {miqaat.miqaat_name}
-                    </option>
-                  ))}
-                </Select>
-              </Label>
-            </div>
-
             {/* Contact Number */}
             <div className="mb-4">
               <Label>
                 <span>Contact Number</span>
-                <Input
+                <Input 
                   className="mt-1"
                   name="contact_number"
                   value={formData.contact_number}
@@ -286,7 +155,7 @@ function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
             <div className="mb-4">
               <Label>
                 <span>WhatsApp Number</span>
-                <Input
+                <Input 
                   className="mt-1"
                   name="whatsapp_number"
                   value={formData.whatsapp_number}
@@ -300,7 +169,7 @@ function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
             <div className="mb-4">
               <Label>
                 <span>Email Address</span>
-                <Input
+                <Input 
                   className="mt-1"
                   name="email_address"
                   value={formData.email_address}
@@ -319,7 +188,7 @@ function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
           <div className="mb-4">
             <Label>
               <span>Mohalla</span>
-              <Textarea
+              <Textarea 
                 className="mt-1"
                 name="mohalla"
                 value={formData.mohalla}
@@ -329,7 +198,7 @@ function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
               />
             </Label>
           </div>
-
+          
           {errors.submit && (
             <div className="mb-4">
               <p className="text-sm text-red-600">{errors.submit}</p>
@@ -342,11 +211,11 @@ function CreateMemberModal({ isOpen, onClose, onMemberCreated }) {
           <Button layout="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
+          <Button 
+            onClick={handleSubmit} 
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Saving...' : 'Save Member'}
+            {isSubmitting ? 'Creating...' : 'Create Member'}
           </Button>
         </div>
       </ModalFooter>

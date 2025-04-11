@@ -125,14 +125,14 @@ function Login() {
 
               <hr className="my-8" />
 
-              <p className="mt-1">
+              {/* <p className="mt-1">
                 <Link
                   className="text-sm font-medium text-purple-600 dark:text-purple-400 hover:underline"
                   to="/create-account"
                 >
                   Don't have an account? Create one here
                 </Link>
-              </p>
+              </p> */}
             </form>
           </main>
         </div>

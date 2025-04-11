@@ -1,12 +1,12 @@
 import axios from "axios";
 
-let BASE_URL = "https://dana.up.railway.app/";
+let BASE_URL = "https://dana-app.up.railway.app/";
 
 if (process.env.NODE_ENV === "production") {
   console.log("Running in Production Mode");
-  BASE_URL = "https://dana.up.railway.app/";
+  BASE_URL = "https://dana-app.up.railway.app/";
 } else {
-  // BASE_URL = "https://wl1ndb4p-8000.inc1.devtunnels.ms/";
+  // BASE_URL = "http://localhost:8000/api/v1";
   console.log("Running in Development Mode");
 }
 

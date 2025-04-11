@@ -20,7 +20,7 @@ const routes = [
   {
     path: '/app/members',
     icon: 'HandShake',
-    name: 'Khidamt Guzar',
+    name: 'Khidmat Guzer',
   },
   {
     path: '/app/units',
@@ -31,6 +31,11 @@ const routes = [
     path: '/app/zones',
     icon: 'ZoneLocation',
     name: 'Zones',
+  },
+  {
+    path: '/app/containers',
+    icon: 'Container1',
+    name: 'Containers',
   },
 
 ]

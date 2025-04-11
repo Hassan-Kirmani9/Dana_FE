@@ -80,8 +80,8 @@ const MiqaatHome = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div className="p-6 flex justify-center items-center min-h-screen" >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
         {/* General Card */}
         {renderCard('general', 
           <svg

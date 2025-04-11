@@ -1,366 +1,449 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useLocation, useHistory } from "react-router-dom";
-import PageTitle from "../components/Typography/PageTitle";
-import {
-  Table,
-  TableHeader,
-  TableCell,
-  TableBody,
-  TableRow,
-  TableFooter,
-  TableContainer,
-  Badge,
-  Button,
-  Pagination,
-} from "@windmill/react-ui";
-import { EditIcon, TrashIcon } from "../icons";
-import { AiOutlinePlusCircle } from "react-icons/ai";
-import { post, get, _delete } from "../api/axios";
-import toast from "react-hot-toast";
+import React, { useState, useEffect, useRef } from "react"
+import { useLocation, useHistory } from "react-router-dom"
+import { FaEdit, FaTrash, FaPlus, FaChevronLeft, FaChevronRight, FaTimes } from "react-icons/fa"
+import PageTitle from "../components/Typography/PageTitle"
+import { post, get, _delete } from "../api/axios"
+import toast from "react-hot-toast"
 
 function Tables() {
-  const location = useLocation();
-  const history = useHistory();
+  const location = useLocation()
+  const history = useHistory()
 
   // Get miqaat_type from URL query parameters
-  const queryParams = new URLSearchParams(location.search);
-  const miqaatType = queryParams.get('miqaat_type');
+  const queryParams = new URLSearchParams(location.search)
+  const miqaatType = queryParams.get('miqaat_type')
 
   // State for the table
-  const [currentPage, setCurrentPage] = useState(1);
-  const [tableData, setTableData] = useState([]);
-  const [totalResults, setTotalResults] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFeatureLoading, setIsFeatureLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1)
+  const [tableData, setTableData] = useState([])
+  const [totalResults, setTotalResults] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isFeatureLoading, setIsFeatureLoading] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   // Using refs to prevent infinite loops
-  const prevMiqaatTypeRef = useRef();
-  const fetchingRef = useRef(false);
-  const initialRenderRef = useRef(true);
-
-
+  const prevMiqaatTypeRef = useRef()
+  const fetchingRef = useRef(false)
+  const initialRenderRef = useRef(true)
 
   // Pagination setup
-  const resultsPerPage = 10;
-
+  const resultsPerPage = 10
 
   const getPageTitle = () => {
     switch (miqaatType) {
       case 'general_miqaats':
-        return 'General Miqaats';
+        return 'General Miqaats'
       case 'ramadan':
-        return 'Ramadan';
+        return 'Ramadan'
       case 'private_events':
-        return 'Private Events';
+        return 'Private Events'
       default:
-        return 'Miqaats'; 
+        return 'Miqaats'
     }
-  };
+  }
 
   const fetchMiqaatData = async (page, type) => {
-    if (fetchingRef.current) return;
+    if (fetchingRef.current) return
 
-    fetchingRef.current = true;
-    setIsLoading(true);
+    fetchingRef.current = true
+    setIsLoading(true)
 
     try {
-      let url = '/miqaat/filter/';
+      let url = '/miqaat/filter/'
       if (type) {
-        url += `?miqaat_type=${type}`;
+        url += `?miqaat_type=${type}`
       }
 
-      console.log(`Fetching data: ${url}`);
-      const response = await get(url);
+      const response = await get(url)
 
       if (response && Array.isArray(response)) {
-        setTableData(response.slice((page - 1) * resultsPerPage, page * resultsPerPage));
-        setTotalResults(response.length);
+        setTableData(response.slice((page - 1) * resultsPerPage, page * resultsPerPage))
+        setTotalResults(response.length)
       } else {
-        console.error('Unexpected response format:', response);
-        setTableData([]);
-        setTotalResults(0);
+        console.error('Unexpected response format:', response)
+        setTableData([])
+        setTotalResults(0)
       }
     } catch (error) {
-      console.error('Error fetching miqaat data:', error);
-      setTableData([]);
-      setTotalResults(0);
+      console.error('Error fetching miqaat data:', error)
+      setTableData([])
+      setTotalResults(0)
     } finally {
-      setIsLoading(false);
-      fetchingRef.current = false;
+      setIsLoading(false)
+      fetchingRef.current = false
     }
-  };
+  }
 
   // Only run on mount and when miqaatType changes
   useEffect(() => {
-    // Only fetch if we haven't fetched yet (initial render) 
-    // or the miqaat type has actually changed
     const shouldFetch = initialRenderRef.current ||
-      prevMiqaatTypeRef.current !== miqaatType;
+      prevMiqaatTypeRef.current !== miqaatType
 
     if (shouldFetch && !fetchingRef.current) {
-      // Update for initial render tracking
-      initialRenderRef.current = false;
+      initialRenderRef.current = false
 
-      // Set current page and fetch data
       if (prevMiqaatTypeRef.current !== miqaatType) {
-        setCurrentPage(1);
+        setCurrentPage(1)
       }
 
-      // Store current miqaat type for next comparison
-      prevMiqaatTypeRef.current = miqaatType;
+      prevMiqaatTypeRef.current = miqaatType
 
-      // Fetch with slight delay to avoid potential timing issues
       setTimeout(() => {
-        fetchMiqaatData(1, miqaatType);
-      }, 0);
+        fetchMiqaatData(1, miqaatType)
+      }, 0)
     }
-  }, [miqaatType]);
+  }, [miqaatType])
 
   // Handle page changes initiated by the user
   const onPageChange = (p) => {
     if (p !== currentPage && !fetchingRef.current) {
-      setCurrentPage(p);
-      // Use setTimeout to ensure state updates before fetch
+      setCurrentPage(p)
       setTimeout(() => {
-        fetchMiqaatData(p, miqaatType);
-      }, 0);
+        fetchMiqaatData(p, miqaatType)
+      }, 0)
     }
-  };
-
+  }
 
   // Modified to pass the miqaat_type to the form
   const handleCreateClick = () => {
     if (miqaatType) {
-      history.push(`/app/forms?miqaat_type=${miqaatType}`);
+      history.push(`/app/forms?miqaat_type=${miqaatType}`)
     } else {
-      history.push("/app/forms");
+      history.push("/app/forms")
     }
-  };
+  }
+
   // Handle fetching data from feature-specific endpoints and navigating
   const handleFeatureClick = async (featureType, miqaatId) => {
     try {
-      // Set loading state to true when feature is clicked
-      setIsFeatureLoading(true);
-  
-      let endpoint = '';
-      let navigationPath = '';
-  
+      setIsFeatureLoading(true)
+
+      let endpoint = ''
+      let navigationPath = ''
+
       switch (featureType) {
         case 'miqaat-menu':
-          endpoint = `/miqaat-menu/${miqaatId}`;
-          navigationPath = `/app/miqaat-menu/${miqaatId}`;
-          break;
+          endpoint = `/miqaat-menu/${miqaatId}`
+          navigationPath = `/app/miqaat-menu/${miqaatId}`
+          break
         case 'miqaat-attendance':
-          endpoint = `/miqaat-attendance/${miqaatId}`;
-          navigationPath = `/app/miqaat-attendance/${miqaatId}`;
-          break;
+          endpoint = `/miqaat-attendance/${miqaatId}`
+          navigationPath = `/app/miqaat-attendance/${miqaatId}`
+          break
         case 'counter-packing':
-          endpoint = `/counter-packing/${miqaatId}`;
-          navigationPath = `/app/counter-packing/${miqaatId}`;
-          break;
+          endpoint = `/counter-packing/${miqaatId}`
+          navigationPath = `/app/counter-packing/${miqaatId}`
+          break
         case 'distribution':
-          endpoint = `/distribution/${miqaatId}`;
-          navigationPath = `/app/distribution/${miqaatId}`;
-          break;
+          endpoint = `/distribution/${miqaatId}`
+          navigationPath = `/app/distribution/${miqaatId}`
+          break
         case 'leftover-degs':
-          endpoint = `/leftover-degs/${miqaatId}`;
-          navigationPath = `/app/leftover-degs/${miqaatId}`;
-          break;
+          endpoint = `/leftover-degs/${miqaatId}`
+          navigationPath = `/app/leftover-degs/${miqaatId}`
+          break
         default:
-          console.error('Unknown feature type:', featureType);
-          setIsFeatureLoading(false);
-          return;
+          console.error('Unknown feature type:', featureType)
+          setIsFeatureLoading(false)
+          return
       }
-  
-      const response = await get(endpoint);
-  
+
+      const response = await get(endpoint)
+
       if (response) {
         history.push({
           pathname: navigationPath,
           state: { featureData: response }
-        });
+        })
       }
     } catch (error) {
-      console.error(`Error fetching ${featureType} data for ID ${miqaatId}:`, error);
-      toast.error(`Failed to load ${featureType} data`);
+      console.error(`Error fetching ${featureType} data for ID ${miqaatId}:`, error)
+      toast.error(`Failed to load ${featureType} data`)
     } finally {
-      // Ensure loading state is set to false
-      setIsFeatureLoading(false);
+      setIsFeatureLoading(false)
     }
-  };
-  
- 
+  }
+
   const handleDeleteMiqaat = async (id) => {
     try {
-      // Confirm deletion
-      const confirmDelete = window.confirm('Are you sure you want to delete this Miqaat?');
+      const confirmDelete = window.confirm('Are you sure you want to delete this Miqaat?')
 
       if (confirmDelete) {
-        // Perform delete operation
-        const res = await _delete(`/miqaat/${id}/`);
-        console.log(res, "!@!@!@!@!@1");
-
-        // Optionally, update the table data or redirect
-        // For example, remove the deleted item from the list
-        setTableData(prevData => prevData.filter(item => item.id !== id));
-        toast.success('Miqaat deleted successfully');
-
-
+        const res = await _delete(`/miqaat/${id}/`)
+        setTableData(prevData => prevData.filter(item => item.id !== id))
+        toast.success('Miqaat deleted successfully')
       }
     } catch (error) {
-      console.error('Error deleting Miqaat:', error);
-      alert('Failed to delete Miqaat. Please try again.');
+      console.error('Error deleting Miqaat:', error)
+      alert('Failed to delete Miqaat. Please try again.')
     }
-  };
-  return (
-    <>
-      <div className="flex justify-between items-center mb-6">
-        <div>
-        <PageTitle>{getPageTitle()}</PageTitle>
+  }
 
-        </div>
-        <Button onClick={handleCreateClick} className="flex items-center">
-          <AiOutlinePlusCircle className="w-4 h-4 mr-1" />
-          Create
-        </Button>
+  const handleRowClick = (event) => {
+    setSelectedEvent(event)
+    setIsDialogOpen(true)
+  }
+
+  const getFeatureColor = (feature) => {
+    const colorMap = {
+      "Menu": "bg-blue-500",
+      "Attendance": "bg-green-500",
+      "Counter Packing": "bg-yellow-500",
+      "Distribution": "bg-purple-500",
+      "Leftover Degs": "bg-teal-500"
+    }
+    return colorMap[feature] || "bg-gray-500"
+  }
+
+  // Pagination calculations
+  const totalPages = Math.ceil(tableData.length / resultsPerPage)
+  const startIndex = (currentPage - 1) * resultsPerPage
+
+  return (
+    <div className="w-full px-4 py-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <PageTitle>{getPageTitle()}</PageTitle>
+        <button
+          className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded flex items-center"
+          onClick={handleCreateClick}
+        >
+          <FaPlus className="mr-2" /> Create
+        </button>
       </div>
 
+      {/* Loading State */}
       {isLoading ? (
         <div className="flex justify-center my-8">
-          <div className="text-center">
-            <p className="text-gray-700 dark:text-gray-300">Loading data...</p>
-          </div>
+          <p className="text-gray-700">Loading data...</p>
+        </div>
+      ) : tableData.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-700">No records found</p>
         </div>
       ) : (
-        <TableContainer className="mb-8">
-          {tableData.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-700 dark:text-gray-300">No records found</p>
-            </div>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <tr>
-                    <TableCell>Sno.</TableCell>
-                    <TableCell>Miqaat Name</TableCell>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Hijri Date</TableCell>
-                    <TableCell>Features</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </tr>
-                </TableHeader>
-                <TableBody>
-                  {tableData.map((item, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <div className="flex items-center text-sm">
-                          <p className="font-semibold">{i + 1}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center text-sm">
-                          <div>
-                            <p className="font-semibold">{item.miqaat_name}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">
-                          {new Date(item.miqaat_date).toLocaleDateString()}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge type="primary">
-                          {item.hijri_date}
-                        </Badge>
-                      </TableCell>
-                   
-                      <TableCell>
-                        <div className="flex items-center space-x-1">
-                          <button onClick={() => handleFeatureClick('miqaat-menu', item.id)}
-                            className="px-2 py-1 text-xs rounded-l-md bg-indigo-600 text-white hover:bg-indigo-700">
-                            Menu
-                          </button>
-                          <button onClick={() => handleFeatureClick('miqaat-attendance', item.id)}
-                            className="px-2 py-1 text-xs bg-green-600 text-white hover:bg-green-700">
-                            Attendance
-                          </button>
-                          <button onClick={() => handleFeatureClick('counter-packing', item.id)}
-                            className="px-2 py-1 text-xs bg-yellow-600 text-white hover:bg-yellow-700">
-                            Counter Packing
-                          </button>
+        <>
+          {/* Desktop Table - Hidden on mobile */}
+          <div className="hidden md:block overflow-x-auto rounded-lg border">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">SNO.</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">MIQAAT NAME</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">DATE</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">HIJRI DATE</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">FEATURES</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {tableData.map((event, index) => (
+                  <tr key={event.id} className="bg-white">
+                    <td className="px-4 py-3 text-sm">{startIndex + index + 1}</td>
+                    <td className="px-4 py-3 text-sm font-medium">{event.miqaat_name}</td>
+                    <td className="px-4 py-3 text-sm">{new Date(event.miqaat_date).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-sm">{event.hijri_date}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center space-x-1">
+                        {[
+                          { name: 'Menu', type: 'miqaat-menu' },
+                          { name: 'Attendance', type: 'miqaat-attendance' },
+                          { name: 'Counter Packing', type: 'counter-packing' },
+                          { name: 'Distribution', type: 'distribution' },
+                          { name: 'Leftover Degs', type: 'leftover-degs' }
+                        ].map((feature) => (
                           <button
-                            onClick={() => handleFeatureClick('distribution', item.id)}
-                            className="px-2 py-1 text-xs bg-blue-600 text-white hover:bg-blue-700"
+                            key={feature.name}
+                            onClick={() => handleFeatureClick(feature.type, event.id)}
+                            className={`px-2 py-1 text-xs text-white rounded ${getFeatureColor(feature.name)}`}
                           >
-                            Distribution
+                            {feature.name}
                           </button>
-                          <button onClick={() => handleFeatureClick('leftover-degs', item.id)}
-                            className="px-2 py-1 text-xs rounded-r-md bg-teal-600 text-white hover:bg-teal-700">
-                            Leftover Degs
-                          </button>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-4">
-                          <Button
-                            layout="link"
-                            size="icon"
-                            aria-label="Edit"
-                            onClick={() => history.push(`/app/edit-miqaat/${item.id}`)}
-                          >
-                            <EditIcon className="w-5 h-5" aria-hidden="true" />
-                          </Button>
-                          <Button
-                            layout="link"
-                            size="icon"
-                            aria-label="Delete"
-                            onClick={() => handleDeleteMiqaat(item.id)}
-                          >
-                            <TrashIcon className="w-5 h-5" aria-hidden="true" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <TableFooter>
-                <Pagination
-                  totalResults={totalResults}
-                  resultsPerPage={resultsPerPage}
-                  onChange={onPageChange}
-                  label="Table navigation"
-                  currentPage={currentPage}
-                />
-              </TableFooter>
-            </>
-          )}
-        </TableContainer>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          className="text-gray-600 hover:text-blue-600"
+                          onClick={() => history.push(`/app/edit-miqaat/${event.id}`)}
+                        >
+                          <FaEdit className="h-4 w-4" />
+                        </button>
+                        <button
+                          className="text-gray-600 hover:text-red-600"
+                          onClick={() => handleDeleteMiqaat(event.id)}
+                        >
+                          <FaTrash className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile View */}
+          <div className="md:hidden space-y-4">
+            {tableData.map((event) => (
+              <div
+                key={event.id}
+                className="bg-white rounded-lg shadow-md border"
+                onClick={() => handleRowClick(event)}
+              >
+                <div className="grid grid-cols-3 p-4 cursor-pointer">
+                  <div className="col-span-2">
+                    <h3 className="font-semibold text-gray-800">{event.miqaat_name}</h3>
+                    <p className="text-sm text-gray-500">
+                      {new Date(event.miqaat_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-purple-600 font-medium">
+                      {event.hijri_date}
+                    </p>
+                    <div className="flex justify-end mt-2 space-x-2">
+                      <button
+                        className="text-gray-600 hover:text-blue-600"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          history.push(`/app/edit-miqaat/${event.id}`)
+                        }}
+                      >
+                        <FaEdit className="h-4 w-4" />
+                      </button>
+                      <button
+                        className="text-gray-600 hover:text-red-600"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteMiqaat(event.id)
+                        }}
+                      >
+                        <FaTrash className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-gray-500">
+              SHOWING {startIndex + 1}-{Math.min(startIndex + resultsPerPage, tableData.length)} OF {tableData.length}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className="p-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                <FaChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="px-4 py-2 bg-purple-600 text-white rounded">
+                {currentPage}
+              </div>
+              <button
+                className="p-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                <FaChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </>
       )}
-  {isFeatureLoading && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div 
-      style={{
-        border: '4px solid #e6e6fa',
-        borderTop: '4px solid #8a2be2',
-        borderRadius: '50%',
-        width: '50px',
-        height: '50px',
-        animation: 'spin 1s linear infinite'
-      }}
-    />
-    <style jsx>{`
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `}</style>
-  </div>
-)}
-    </>
-  );
+
+      {/* Features Dialog */}
+      {isDialogOpen && selectedEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg w-11/12 max-w-md max-h-[90vh] overflow-auto">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-semibold">{selectedEvent.miqaat_name} - Features</h2>
+              <button
+                className="text-gray-600 hover:text-gray-800"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                <FaTimes className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Date</p>
+                  <p className="font-medium">{new Date(selectedEvent.miqaat_date).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Hijri Date</p>
+                  <p className="font-medium">{selectedEvent.hijri_date}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Thaals Polled</p>
+                  <p className="font-medium">{selectedEvent.thaals_polled}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Thaals Cooked</p>
+                  <p className="font-medium">{selectedEvent.thaals_cooked}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Thaals Served</p>
+                  <p className="font-medium">{selectedEvent.thaals_served}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-4">Features</p>
+                <div className="grid grid-cols-2 gap-4">
+                  {[
+                    { name: 'Menu', type: 'miqaat-menu', color: 'bg-blue-500' },
+                    { name: 'Attendance', type: 'miqaat-attendance', color: 'bg-green-500' },
+                    { name: 'Counter Packing', type: 'counter-packing', color: 'bg-yellow-500' },
+                    { name: 'Distribution', type: 'distribution', color: 'bg-purple-500' },
+                    { name: 'Leftover Degs', type: 'leftover-degs', color: 'bg-teal-500' }
+                  ].map((feature) => (
+                    <button
+                      key={feature.name}
+                      onClick={() => handleFeatureClick(feature.type, selectedEvent.id)}
+                      className={`w-full py-10 text-white rounded-lg text-base font-semibold ${feature.color} hover:opacity-90 transition-all`}
+                    >
+                      {feature.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Feature Loading Overlay */}
+      {isFeatureLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div
+            style={{
+              border: '4px solid #e6e6fa',
+              borderTop: '4px solid #8a2be2',
+              borderRadius: '50%',
+              width: '50px',
+              height: '50px',
+              animation: 'spin 1s linear infinite'
+            }}
+          />
+          <style jsx>{`
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      )}
+    </div>
+  )
 }
 
-export default Tables;
+export default Tables

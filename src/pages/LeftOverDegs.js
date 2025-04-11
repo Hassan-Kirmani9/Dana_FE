@@ -19,7 +19,7 @@ function LeftoverDegs() {
   const { id } = useParams();
   const location = useLocation();
   const history = useHistory();
-  
+
   const [leftoverData, setLeftoverData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -33,7 +33,7 @@ function LeftoverDegs() {
       setIsLoading(false);
       return;
     }
-    
+
     // Fetch data
     fetchLeftoverData();
   }, [id, location.state]);
@@ -55,11 +55,11 @@ function LeftoverDegs() {
   const fetchLeftoverData = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Console log for debugging
       console.log(`Fetching leftover degs data for miqaat ID: ${id}`);
-      
+
       // Fixed URL to match the correct endpoint
       const response = await get(`/leftover-degs/${id}`);
       console.log('Leftover degs response:', response);
@@ -91,16 +91,31 @@ function LeftoverDegs() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mt-6">
         <div className="flex items-center">
-          <PageTitle>
+          <Button
+            layout="link"
+            onClick={handleBackClick}
+            className="mr-4"
+          >
+            <AiOutlineArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1
+            style={{
+              fontSize: window.innerWidth < 768 ? '1.25rem' : '1.5rem',
+            }}
+            className='font-semibold'
+          >
             Leftover Degs
-            {miqaatDetails && ` - ${miqaatDetails.miqaat_name}`}
-          </PageTitle>
+          </h1>
         </div>
-        <Button onClick={handleAddLeftoverDeg} className="flex items-center">
+        <Button onClick={handleAddLeftoverDeg} className="flex items-center"
+          style={{
+            fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem',
+            padding: window.innerWidth < 768 ? '0.5rem' : '0.75rem'
+          }}>
           <AiOutlinePlusCircle className="w-4 h-4 mr-1" />
-          Add Leftover Degs
+          Add 
         </Button>
       </div>
 
@@ -120,7 +135,7 @@ function LeftoverDegs() {
       ) : (
         <>
           {/* Leftover Degs Table */}
-          <TableContainer className="mb-8">
+          <TableContainer className="mb-8 mt-10">
             {!leftoverData?.leftover_degs || leftoverData.leftover_degs.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-700 dark:text-gray-300">No leftover degs records found</p>

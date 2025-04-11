@@ -19,10 +19,10 @@ import { AiOutlinePlusCircle, AiOutlineArrowLeft } from 'react-icons/ai';
 import CreateDistributionModal from './CreateDistributionModal';
 
 function Distribution() {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const location = useLocation();
   const history = useHistory();
-  
+
   const [distributionData, setDistributionData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,7 +36,7 @@ function Distribution() {
       setIsLoading(false);
       return;
     }
-    
+
     // Fetch data
     fetchDistributionData();
   }, [id, location.state]);
@@ -57,7 +57,7 @@ function Distribution() {
   const fetchDistributionData = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       console.log(`Fetching distribution data for miqaat ID: ${id}`);
       const response = await get(`/distribution/${id}`);
@@ -89,7 +89,7 @@ function Distribution() {
 
   const calculateTotals = () => {
     if (!distributionData?.distributions) return { total: 0, ibadullah: 0, mumin: 0 };
-    
+
     return distributionData.distributions.reduce((acc, item) => {
       return {
         total: acc.total + item.ibadullah_count + item.mumin_count,
@@ -103,16 +103,30 @@ function Distribution() {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mt-6">
         <div className="flex items-center">
-          <PageTitle>
-            Distribution Details
-            {miqaatDetails && ` - ${miqaatDetails.miqaat_name}`}
-          </PageTitle>
+          <Button
+            layout="link"
+            onClick={handleBackClick}
+            className="mr-4"
+          >
+            <AiOutlineArrowLeft className="w-5 h-5" />
+          </Button>
+          <h1
+            style={{
+              fontSize: window.innerWidth < 768 ? '1rem' : '1.5rem',
+            }}
+            className='font-semibold'
+          >            Distribution 
+          </h1>
         </div>
-        <Button onClick={handleAddDistribution} className="flex items-center">
+        <Button onClick={handleAddDistribution} className="flex items-center"
+          style={{
+            fontSize: window.innerWidth < 768 ? '0.875rem' : '1rem',
+            padding: window.innerWidth < 768 ? '0.5rem' : '0.75rem'
+          }}>
           <AiOutlinePlusCircle className="w-4 h-4 mr-1" />
-          Add Distribution
+          Add 
         </Button>
       </div>
 
@@ -131,7 +145,7 @@ function Distribution() {
         </div>
       ) : (
         <>
-          <TableContainer className="mb-8">
+          <TableContainer className="mb-8 mt-10">
             {!distributionData?.distributions || distributionData.distributions.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-700 dark:text-gray-300">No distribution records found</p>
@@ -201,7 +215,7 @@ function Distribution() {
           </TableContainer>
         </>
       )}
-      
+
       <CreateDistributionModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
