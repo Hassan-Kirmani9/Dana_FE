@@ -96,14 +96,6 @@ function Header() {
               isOpen={isProfileMenuOpen}
               onClose={() => setIsProfileMenuOpen(false)}
             >
-              <DropdownItem tag="a" href="#">
-                <OutlinePersonIcon className="w-4 h-4 mr-3" aria-hidden="true" />
-                <span>Profile</span>
-              </DropdownItem>
-              <DropdownItem tag="a" href="#">
-                <OutlineCogIcon className="w-4 h-4 mr-3" aria-hidden="true" />
-                <span>Settings</span>
-              </DropdownItem>
               <DropdownItem onClick={handleLogout}>
                 <OutlineLogoutIcon className="w-4 h-4 mr-3" aria-hidden="true" />
                 <span>Log out</span>
