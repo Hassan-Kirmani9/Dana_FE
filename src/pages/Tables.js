@@ -49,7 +49,7 @@ function Tables() {
       case 'general_miqaats':
         return 'General Miqaats';
       case 'ramadan':
-        return 'Ramadan Miqaats';
+        return 'Ramadan';
       case 'private_events':
         return 'Private Events';
       default:
