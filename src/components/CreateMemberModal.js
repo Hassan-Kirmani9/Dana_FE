@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Add useEffect import
 import {
   Modal,
   ModalHeader,
@@ -28,6 +28,21 @@ function CreateMemberModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Reset formData when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        its: '',
+        full_name: '',
+        contact_number: '',
+        whatsapp_number: '',
+        email_address: '',
+        mohalla: ''
+      });
+      setErrors({}); // Optionally reset errors as well
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -80,6 +95,9 @@ function CreateMemberModal({
       
       // Send POST request to create member
       const response = await post('/member/', dataToSubmit);
+      
+      // Show success toast
+      toast.success('Member created successfully');
       
       // Call the callback to refresh the member list
       if (onMemberCreated) {
@@ -165,6 +183,7 @@ function CreateMemberModal({
               </Label>
             </div>
 
+          </div>
             {/* Email Address */}
             <div className="mb-4">
               <Label>
@@ -182,7 +201,6 @@ function CreateMemberModal({
                 )}
               </Label>
             </div>
-          </div>
 
           {/* Mohalla - Full width */}
           <div className="mb-4">
@@ -208,7 +226,6 @@ function CreateMemberModal({
       </ModalBody>
       <ModalFooter>
         <div className="flex flex-col space-y-2 sm:space-y-0 sm:space-x-2 sm:flex-row">
-      
           <Button 
             onClick={handleSubmit} 
             disabled={isSubmitting}

@@ -65,7 +65,6 @@ function MenuList() {
 
   const handleMenuCreated = () => {
     setRefreshTrigger(prev => prev + 1);
-    toast.success('Menu created successfully');
   };
 
   const handleMenuUpdated = () => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   ModalHeader,
@@ -11,10 +11,10 @@ import {
 import { post } from '../api/axios';
 import toast from 'react-hot-toast';
 
-function CreateContainerModal({ 
-  isOpen, 
-  onClose, 
-  onContainerCreated 
+function CreateContainerModal({
+  isOpen,
+  onClose,
+  onContainerCreated
 }) {
   const [formData, setFormData] = useState({
     name: ''
@@ -22,6 +22,15 @@ function CreateContainerModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        name: ''
+      });
+      setErrors({});
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,39 +42,42 @@ function CreateContainerModal({
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Container name is required';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
       setIsSubmitting(true);
+
       
-      // Prepare data for submission
       const dataToSubmit = {
         name: formData.name.trim()
       };
+
       
-      // Send POST request to create container
       const response = await post('/container/', dataToSubmit);
+
       
-      // Call the callback to refresh the container list
+      toast.success('Container created successfully');
+
+      
       if (onContainerCreated) {
         onContainerCreated();
       }
+
       
-      // Close the modal
       onClose();
     } catch (error) {
       console.error('Error creating container:', error);
@@ -83,7 +95,7 @@ function CreateContainerModal({
           <div className="mb-4">
             <Label>
               <span>Container Name *</span>
-              <Input 
+              <Input
                 className="mt-1"
                 name="name"
                 value={formData.name}
@@ -95,7 +107,7 @@ function CreateContainerModal({
               )}
             </Label>
           </div>
-          
+
           {errors.submit && (
             <div className="mb-4">
               <p className="text-sm text-red-600">{errors.submit}</p>
@@ -105,9 +117,8 @@ function CreateContainerModal({
       </ModalBody>
       <ModalFooter>
         <div className="flex flex-col space-y-2 sm:space-y-0 sm:space-x-2 sm:flex-row">
-       
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Creating...' : 'Create Container'}

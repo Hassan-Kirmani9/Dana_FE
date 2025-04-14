@@ -13,11 +13,11 @@ import {
 import { get, post } from '../api/axios';
 import toast from 'react-hot-toast';
 
-const CreateMiqaatAttendanceModal = ({ 
-  isOpen, 
-  onClose, 
-  miqaatId, 
-  onSuccess 
+const CreateMiqaatAttendanceModal = ({
+  isOpen,
+  onClose,
+  miqaatId,
+  onSuccess
 }) => {
   const [formData, setFormData] = useState({
     miqaat: miqaatId,
@@ -72,12 +72,12 @@ const CreateMiqaatAttendanceModal = ({
   };
 
   const validateTimes = (checkin, checkout) => {
-    if (!checkin || !checkout) return true; 
-    
-    const today = new Date().toISOString().split('T')[0]; 
+    if (!checkin || !checkout) return true;
+
+    const today = new Date().toISOString().split('T')[0];
     const checkinDate = new Date(`${today}T${checkin}`);
     const checkoutDate = new Date(`${today}T${checkout}`);
-    
+
     return true;
   };
 
@@ -90,7 +90,7 @@ const CreateMiqaatAttendanceModal = ({
       // Validate required fields
       const requiredFields = ['zone', 'member', 'counter', 'checkin_time', 'checkout_time'];
       const missingFields = requiredFields.filter(field => !formData[field]);
-      
+
       if (missingFields.length > 0) {
         setError(`Please fill in all required fields: ${missingFields.join(', ')}`);
         setIsSubmitting(false);
@@ -115,13 +115,13 @@ const CreateMiqaatAttendanceModal = ({
 
       // Submit the form
       const response = await post('/miqaat-attendance/', submissionData);
-      
+
       // Show success toast
       toast.success('Attendance record created successfully');
-      
+
       // Call success callback
       onSuccess(response);
-      
+
       // Close the modal
       onClose();
     } catch (err) {
@@ -181,8 +181,36 @@ const CreateMiqaatAttendanceModal = ({
               </Select>
             </Label>
 
-            {/* Counter Dropdown */}
+            {/* Check-in Time */}
             <Label className="block text-sm">
+              <span className="text-gray-700 dark:text-gray-400">Check-in Time *</span>
+              <Input
+                type="time"
+                name="checkin_time"
+                value={formData.checkin_time}
+                onChange={handleInputChange}
+                className="mt-1"
+                required
+              />
+            </Label>
+
+            {/* Check-out Time */}
+            <Label className="block text-sm">
+              <span className="text-gray-700 dark:text-gray-400">Check-out Time *</span>
+              <Input
+                type="time"
+                name="checkout_time"
+                value={formData.checkout_time}
+                onChange={handleInputChange}
+                className="mt-1"
+                required
+              />
+              
+            </Label>
+
+
+            {/* Counter Dropdown */}
+            <Label className="block text-sm col-span-1 md:col-span-2">
               <span className="text-gray-700 dark:text-gray-400">Counter *</span>
               <Select
                 name="counter"
@@ -199,35 +227,6 @@ const CreateMiqaatAttendanceModal = ({
                 ))}
               </Select>
             </Label>
-
-            {/* Check-in Time */}
-            <Label className="block text-sm">
-              <span className="text-gray-700 dark:text-gray-400">Check-in Time *</span>
-              <Input
-                type="time"
-                name="checkin_time"
-                value={formData.checkin_time}
-                onChange={handleInputChange}
-                className="mt-1"
-                required
-              />
-            </Label>
-
-            {/* Check-out Time */}
-            <Label className="block text-sm col-span-1 md:col-span-2">
-              <span className="text-gray-700 dark:text-gray-400">Check-out Time *</span>
-              <Input
-                type="time"
-                name="checkout_time"
-                value={formData.checkout_time}
-                onChange={handleInputChange}
-                className="mt-1"
-                required
-              />
-              <HelperText>
-                Check-out time can be before check-in time if spanning multiple days
-              </HelperText>
-            </Label>
           </div>
         </form>
       </ModalBody>
@@ -238,28 +237,28 @@ const CreateMiqaatAttendanceModal = ({
           </Button>
         </div>
         <div className="hidden sm:block">
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
         </div>
-        
+
         {/* Mobile buttons */}
         <div className="w-full sm:hidden">
-          <Button 
-            block 
-            size="large" 
-            layout="outline" 
+          <Button
+            block
+            size="large"
+            layout="outline"
             onClick={onClose}
             className="mb-4"
           >
             Cancel
           </Button>
-          <Button 
-            block 
-            size="large" 
+          <Button
+            block
+            size="large"
             onClick={handleSubmit}
             disabled={isSubmitting}
           >

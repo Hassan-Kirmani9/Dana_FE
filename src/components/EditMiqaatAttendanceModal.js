@@ -13,12 +13,12 @@ import {
 import { get, patch } from '../api/axios';
 import toast from 'react-hot-toast';
 
-const EditMiqaatAttendanceModal = ({ 
-  isOpen, 
-  onClose, 
-  miqaatId, 
+const EditMiqaatAttendanceModal = ({
+  isOpen,
+  onClose,
+  miqaatId,
   attendanceData,
-  onSuccess 
+  onSuccess
 }) => {
   const [formData, setFormData] = useState({
     miqaat: miqaatId,
@@ -109,7 +109,7 @@ const EditMiqaatAttendanceModal = ({
       // Validate required fields
       const requiredFields = ['zone', 'member', 'counter', 'checkin_time', 'checkout_time'];
       const missingFields = requiredFields.filter(field => !formData[field]);
-      
+
       if (missingFields.length > 0) {
         throw new Error(`Please fill in all required fields: ${missingFields.join(', ')}`);
       }
@@ -141,7 +141,7 @@ const EditMiqaatAttendanceModal = ({
 
       // Submit the form
       await patch(`/miqaat-attendance/${attendanceData.id}/`, submissionData);
-      
+
       toast.success('Attendance record updated successfully');
       onSuccess();
       onClose();
@@ -207,8 +207,39 @@ const EditMiqaatAttendanceModal = ({
                 </Select>
               </Label>
 
-              {/* Counter Dropdown */}
+
+
+              {/* Check-in Time */}
               <Label className="block text-sm">
+                <span className="text-gray-700 dark:text-gray-400">Check-in Time *</span>
+                <Input
+                  type="time"
+                  name="checkin_time"
+                  value={formData.checkin_time}
+                  onChange={handleInputChange}
+                  className="mt-1"
+                  required
+                  disabled={isSubmitting}
+                />
+              </Label>
+
+              {/* Check-out Time */}
+              <Label className="block text-sm">
+                <span className="text-gray-700 dark:text-gray-400">Check-out Time *</span>
+                <Input
+                  type="time"
+                  name="checkout_time"
+                  value={formData.checkout_time}
+                  onChange={handleInputChange}
+                  className="mt-1"
+                  required
+                  disabled={isSubmitting}
+                />
+
+              </Label>
+
+              {/* Counter Dropdown */}
+              <Label className="block text-sm col-span-1 md:col-span-2">
                 <span className="text-gray-700 dark:text-gray-400">Counter *</span>
                 <Select
                   name="counter"
@@ -226,54 +257,23 @@ const EditMiqaatAttendanceModal = ({
                   ))}
                 </Select>
               </Label>
-
-              {/* Check-in Time */}
-              <Label className="block text-sm">
-                <span className="text-gray-700 dark:text-gray-400">Check-in Time *</span>
-                <Input
-                  type="time"
-                  name="checkin_time"
-                  value={formData.checkin_time}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                  required
-                  disabled={isSubmitting}
-                />
-              </Label>
-
-              {/* Check-out Time */}
-              <Label className="block text-sm col-span-1 md:col-span-2">
-                <span className="text-gray-700 dark:text-gray-400">Check-out Time *</span>
-                <Input
-                  type="time"
-                  name="checkout_time"
-                  value={formData.checkout_time}
-                  onChange={handleInputChange}
-                  className="mt-1"
-                  required
-                  disabled={isSubmitting}
-                />
-                <HelperText>
-                  Check-out time can be before check-in time if spanning multiple days
-                </HelperText>
-              </Label>
             </div>
           </form>
         )}
       </ModalBody>
       <ModalFooter>
         <div className="hidden sm:block">
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isSubmitting || isDropdownLoading}
           >
             {isSubmitting ? 'Updating...' : 'Update'}
           </Button>
         </div>
         <div className="w-full sm:hidden">
-          <Button 
-            block 
-            size="large" 
+          <Button
+            block
+            size="large"
             onClick={handleSubmit}
             disabled={isSubmitting || isDropdownLoading}
           >

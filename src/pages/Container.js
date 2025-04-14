@@ -65,7 +65,6 @@ function Container() {
 
     const handleContainerCreated = () => {
         setRefreshTrigger(prev => prev + 1);
-        toast.success('Container created successfully');
     };
 
     const handleContainerUpdated = () => {
@@ -75,14 +74,14 @@ function Container() {
 
     const handleDeleteContainer = async (id) => {
         try {
-            // Confirm deletion
+            
             const confirmDelete = window.confirm('Are you sure you want to delete this container?');
 
             if (confirmDelete) {
-                // Perform delete operation
+                
                 await _delete(`/container/${id}/`);
 
-                // Update the container data by removing the deleted item
+                
                 setContainerData(prevData => prevData.filter(item => item.id !== id));
                 toast.success('Container deleted successfully');
             }
@@ -164,14 +163,14 @@ function Container() {
                 </TableContainer>
             )}
 
-            {/* Create Container Modal */}
+            {}
             <CreateContainerModal
                 isOpen={isCreateModalOpen}
                 onClose={handleCreateModalClose}
                 onContainerCreated={handleContainerCreated}
             />
 
-            {/* Edit Container Modal */}
+            {}
             {currentContainer && (
                 <EditContainerModal
                     isOpen={isEditModalOpen}

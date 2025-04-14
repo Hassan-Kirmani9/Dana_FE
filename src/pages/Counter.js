@@ -65,7 +65,6 @@ function Counter() {
 
   const handleCounterCreated = () => {
     setRefreshTrigger(prev => prev + 1);
-    toast.success('Counter created successfully');
   };
 
   const handleCounterUpdated = () => {

@@ -9,24 +9,22 @@ function Tables() {
   const location = useLocation();
   const history = useHistory();
 
-  // Get miqaat_type from URL query parameters
   const queryParams = new URLSearchParams(location.search);
   const miqaatType = queryParams.get('miqaat_type');
 
-  // State for the table
   const [currentPage, setCurrentPage] = useState(1);
   const [tableData, setTableData] = useState([]);
   const [totalResults, setTotalResults] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showThaalsModal, setShowThaalsModal] = useState(false);
+  const [selectedThaals, setSelectedThaals] = useState(null);
 
-  // Using refs to prevent infinite loops
   const prevMiqaatTypeRef = useRef();
   const fetchingRef = useRef(false);
   const initialRenderRef = useRef(true);
 
-  // Pagination setup
   const resultsPerPage = 10;
 
   const getPageTitle = () => {
@@ -74,7 +72,6 @@ function Tables() {
     }
   };
 
-  // Only run on mount and when miqaatType changes
   useEffect(() => {
     const shouldFetch = initialRenderRef.current || prevMiqaatTypeRef.current !== miqaatType;
 
@@ -93,7 +90,40 @@ function Tables() {
     }
   }, [miqaatType]);
 
-  // Handle page changes initiated by the user
+  useEffect(() => {
+
+    const isMobileView = window.innerWidth < 768;
+
+    const storedState = localStorage.getItem('featureModalState');
+    let fromFeatureModal = false;
+    let storedSelectedEvent = null;
+
+    if (storedState) {
+      const parsedState = JSON.parse(storedState);
+      fromFeatureModal = parsedState.fromFeatureModal;
+      storedSelectedEvent = parsedState.selectedEvent;
+    }
+
+    // Prioritize location.state if available, otherwise use localStorage
+    if (isMobileView) {
+      if (location.state?.fromFeatureModal && location.state?.selectedEvent) {
+        console.log('Reopening modal with selectedEvent from location.state:', location.state.selectedEvent);
+        setSelectedEvent(location.state.selectedEvent);
+        setIsDialogOpen(true);
+      } else if (fromFeatureModal && storedSelectedEvent) {
+        console.log('Reopening modal with selectedEvent from localStorage:', storedSelectedEvent);
+        setSelectedEvent(storedSelectedEvent);
+        setIsDialogOpen(true);
+        // Clear the stored state after using it to avoid unintended reopening
+        localStorage.removeItem('featureModalState');
+      } else {
+        console.log('Conditions not met to reopen modal');
+      }
+    } else {
+      console.log('Not in mobile view, skipping modal reopen');
+    }
+  }, [location]);
+
   const onPageChange = (p) => {
     if (p !== currentPage && !fetchingRef.current) {
       setCurrentPage(p);
@@ -103,7 +133,6 @@ function Tables() {
     }
   };
 
-  // Modified to pass the miqaat_type to the form
   const handleCreateClick = () => {
     if (miqaatType) {
       history.push(`/app/forms?miqaat_type=${miqaatType}`);
@@ -112,7 +141,11 @@ function Tables() {
     }
   };
 
-  const handleFeatureClick = (featureType, miqaatId) => {
+  const handleFeatureClick = (featureType, miqaatId, e, fromFeatureModal = false) => {
+    if (e) {
+      e.stopPropagation();
+    }
+
     let navigationPath = '';
 
     switch (featureType) {
@@ -136,11 +169,23 @@ function Tables() {
         return;
     }
 
-    // Navigate to the feature page
-    history.push(navigationPath);
+    const navigationState = {
+      fromFeatureModal: fromFeatureModal,
+      selectedEvent: fromFeatureModal ? selectedEvent : null,
+    };
+
+    if (fromFeatureModal) {
+      localStorage.setItem('featureModalState', JSON.stringify(navigationState));
+    }
+
+    history.push(navigationPath, navigationState);
   };
 
-  const handleDeleteMiqaat = async (id) => {
+  const handleDeleteMiqaat = async (id, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+
     try {
       const confirmDelete = window.confirm('Are you sure you want to delete this Miqaat?');
 
@@ -171,13 +216,31 @@ function Tables() {
     return colorMap[feature] || "bg-gray-500";
   };
 
-  // Pagination calculations
-  const totalPages = Math.ceil(tableData.length / resultsPerPage);
+  const handleViewThaals = (event, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    setSelectedThaals({
+      miqaatName: event.miqaat_name,
+      polled: event.thaals_polled || 0,
+      cooked: event.thaals_cooked || 0,
+      served: event.thaals_served || 0
+    });
+    setShowThaalsModal(true);
+  };
+
+  const handleEditMiqaat = (id, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    history.push(`/app/edit-miqaat/${id}`);
+  };
+
+  const totalPages = Math.ceil(totalResults / resultsPerPage);
   const startIndex = (currentPage - 1) * resultsPerPage;
 
   return (
     <div className="w-full px-4 py-6">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <PageTitle>{getPageTitle()}</PageTitle>
         <button
@@ -188,7 +251,6 @@ function Tables() {
         </button>
       </div>
 
-      {/* Loading State */}
       {isLoading ? (
         <div className="flex justify-center my-8">
           <p className="text-gray-700 dark:text-gray-400">Loading data...</p>
@@ -199,102 +261,134 @@ function Tables() {
         </div>
       ) : (
         <>
-          {/* Desktop Table - Hidden on mobile */}
-          <div className="hidden md:block overflow-x-auto rounded-lg">
-            <table className="w-full dark:bg-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-800">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">SNO.</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">MIQAAT NAME</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">DATE</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">HIJRI DATE</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">FEATURES</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">ACTIONS</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y dark:bg-gray-800">
-                {tableData.map((event, index) => (
-                  <tr key={event.id} className="bg-white">
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:text-gray-400">{startIndex + index + 1}</td>
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:text-gray-400 font-medium">{event.miqaat_name}</td>
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:text-gray-400">{new Date(event.miqaat_date).toLocaleDateString()}</td>
-                    <td className="px-4 py-3 text-sm dark:bg-gray-800 dark:text-gray-400">{event.hijri_date}</td>
-                    <td className="px-4 py-3 dark:bg-gray-800">
-                      <div className="flex items-center space-x-1">
-                        {[
-                          { name: 'Menu', type: 'miqaat-menu' },
-                          { name: 'Attendance', type: 'miqaat-attendance' },
-                          { name: 'Counter Packing', type: 'counter-packing' },
-                          { name: 'Distribution', type: 'distribution' },
-                          { name: 'Leftover Degs', type: 'leftover-degs' }
-                        ].map((feature) => (
-                          <button
-                            key={feature.name}
-                            onClick={() => handleFeatureClick(feature.type, event.id)}
-                            className={`px-2 py-1 text-xs text-white rounded ${getFeatureColor(feature.name)}`}
-                          >
-                            {feature.name}
-                          </button>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 dark:bg-gray-800">
-                      <div className="flex items-center gap-2">
-                        <button
-                          className="text-gray-600 dark:text-gray-400 hover:text-blue-600"
-                          onClick={() => history.push(`/app/edit-miqaat/${event.id}`)}
-                        >
-                          <FaEdit className="h-4 w-4" />
-                        </button>
-                        <button
-                          className="text-gray-600 dark:text-gray-400 hover:text-red-600"
-                          onClick={() => handleDeleteMiqaat(event.id)}
-                        >
-                          <FaTrash className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
+          <div className="hidden md:block rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden bg-white dark:bg-gray-800">
+            <div className="w-full">
+              <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">
+                      SNO.
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      MIQAAT NAME
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      DATE
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      HIJRI DATE
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20">
+                      THAALS
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      FEATURES
+                    </th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20">
+                      ACTIONS
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {tableData.map((event, index) => (
+                    <tr key={event.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-sm text-gray-900 dark:text-gray-300">{startIndex + index + 1}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-300">{event.miqaat_name}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-sm text-gray-900 dark:text-gray-300">{new Date(event.miqaat_date).toLocaleDateString()}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-sm text-gray-900 dark:text-gray-300">{event.hijri_date}</span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <button
+                          onClick={(e) => handleViewThaals(event, e)}
+                          className="bg-purple-600 hover:bg-purple-700 text-white text-xs rounded-md px-3 py-1 w-full"
+                        >
+                          View
+                        </button>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {[
+                            { name: 'Menu', type: 'miqaat-menu' },
+                            { name: 'Attendance', type: 'miqaat-attendance' },
+                            { name: 'Counter Packing', type: 'counter-packing' },
+                            { name: 'Distribution', type: 'distribution' },
+                            { name: 'Leftover Degs', type: 'leftover-degs' }
+                          ].map((feature) => (
+                            <button
+                              key={feature.name}
+                              onClick={(e) => handleFeatureClick(feature.type, event.id, e)}
+                              className={`
+                                px-2 py-1 
+                                text-xs 
+                                text-white 
+                                transition-colors
+                                hover:brightness-90
+                                focus:outline-none
+                                focus:ring-1 
+                                ${getFeatureColor(feature.name)}
+                                rounded
+                              `}
+                            >
+                              {feature.name}
+                            </button>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                            onClick={(e) => handleEditMiqaat(event.id, e)}
+                          >
+                            <FaEdit className="h-4 w-4" />
+                          </button>
+                          <button
+                            className="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                            onClick={(e) => handleDeleteMiqaat(event.id, e)}
+                          >
+                            <FaTrash className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Mobile View */}
           <div className="md:hidden space-y-4">
             {tableData.map((event) => (
               <div
                 key={event.id}
-                className="bg-white rounded-lg shadow-md"
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md"
                 onClick={() => handleRowClick(event)}
               >
                 <div className="grid grid-cols-3 p-4 cursor-pointer">
                   <div className="col-span-2">
-                    <h3 className="font-semibold text-gray-800">{event.miqaat_name}</h3>
+                    <h3 className="font-semibold text-gray-800 dark:text-gray-300">{event.miqaat_name}</h3>
                     <p className="text-sm text-gray-500">
                       {new Date(event.miqaat_date).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-purple-600 font-medium">
-                      {event.hijri_date}
-                    </p>
                     <div className="flex justify-end mt-2 space-x-2">
                       <button
-                        className="text-gray-600 hover:text-blue-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          history.push(`/app/edit-miqaat/${event.id}`);
-                        }}
+                        className="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                        onClick={(e) => handleEditMiqaat(event.id, e)}
                       >
                         <FaEdit className="h-4 w-4" />
                       </button>
                       <button
-                        className="text-gray-600 hover:text-red-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteMiqaat(event.id);
-                        }}
+                        className="text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                        onClick={(e) => handleDeleteMiqaat(event.id, e)}
                       >
                         <FaTrash className="h-4 w-4" />
                       </button>
@@ -305,42 +399,40 @@ function Tables() {
             ))}
           </div>
 
-          {/* Pagination */}
           <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-gray-500">
-              Showing {startIndex + 1}-{Math.min(startIndex + resultsPerPage, tableData.length)} OF {tableData.length}
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Showing {startIndex + 1}-{Math.min(startIndex + resultsPerPage, totalResults)} OF {totalResults}
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="p-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
               >
-                <FaChevronLeft className="h-4 w-4 dark:text-gray-400" />
+                <FaChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-400" />
               </button>
               <div className="px-4 py-2 bg-purple-600 text-white rounded">
                 {currentPage}
               </div>
               <button
-                className="p-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-2 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
-                <FaChevronRight className="h-4 w-4 dark:text-gray-400" />
+                <FaChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-400" />
               </button>
             </div>
           </div>
         </>
       )}
 
-      {/* Features Dialog */}
       {isDialogOpen && selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg w-11/12 max-w-md max-h-[90vh] overflow-auto">
-            <div className="flex justify-between items-center p-4">
-              <h2 className="text-xl font-semibold">{selectedEvent.miqaat_name} - Features</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-11/12 max-w-md max-h-[90vh] overflow-auto">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-300">{selectedEvent.miqaat_name}</h2>
               <button
-                className="text-gray-600 hover:text-gray-800"
+                className="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
                 onClick={() => setIsDialogOpen(false)}
               >
                 <FaTimes className="h-6 w-6" />
@@ -350,29 +442,28 @@ function Tables() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Date</p>
-                  <p className="font-medium">{new Date(selectedEvent.miqaat_date).toLocaleDateString()}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{new Date(selectedEvent.miqaat_date).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Hijri Date</p>
-                  <p className="font-medium">{selectedEvent.hijri_date}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.hijri_date}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Thaals Polled</p>
-                  <p className="font-medium">{selectedEvent.thaals_polled}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.thaals_polled || 0}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Thaals Cooked</p>
-                  <p className="font-medium">{selectedEvent.thaals_cooked}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.thaals_cooked || 0}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Thaals Served</p>
-                  <p className="font-medium">{selectedEvent.thaals_served}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.thaals_served || 0}</p>
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-4">Features</p>
                 <div className="grid grid-cols-2 gap-4">
                   {[
                     { name: 'Menu', type: 'miqaat-menu', color: 'bg-blue-500' },
@@ -383,12 +474,47 @@ function Tables() {
                   ].map((feature) => (
                     <button
                       key={feature.name}
-                      onClick={() => handleFeatureClick(feature.type, selectedEvent.id)}
+                      onClick={(e) => handleFeatureClick(feature.type, selectedEvent.id, e, true)}
                       className={`w-full py-10 text-white rounded-lg text-base font-semibold ${feature.color} hover:opacity-90 transition-all`}
                     >
                       {feature.name}
                     </button>
                   ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showThaalsModal && selectedThaals && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg w-11/12 max-w-md overflow-hidden shadow-xl">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Thaals for {selectedThaals.miqaatName}
+              </h3>
+              <button
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                onClick={() => setShowThaalsModal(false)}
+              >
+                <FaTimes className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="bg-purple-100 dark:bg-purple-500 p-3 rounded-lg">
+                  <div className="text-purple-600 dark:text-white text-sm font-medium">Polled</div>
+                  <div className="text-lg font-bold text-gray-900 dark:text-white">{selectedThaals.polled}</div>
+                </div>
+                <div className="bg-blue-100 dark:bg-blue-500 p-3 rounded-lg">
+                  <div className="text-blue-600 dark:text-white text-sm font-medium">Cooked</div>
+                  <div className="text-lg font-bold text-gray-900 dark:text-white">{selectedThaals.cooked}</div>
+                </div>
+                <div className="bg-green-100 dark:bg-green-500 p-3 rounded-lg">
+                  <div className="text-green-600 dark:text-white text-sm font-medium">Served</div>
+                  <div className="text-lg font-bold text-gray-900 dark:text-white">{selectedThaals.served}</div>
                 </div>
               </div>
             </div>

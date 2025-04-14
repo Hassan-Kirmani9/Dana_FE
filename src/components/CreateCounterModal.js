@@ -26,6 +26,17 @@ function CreateCounterModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // Reset formData when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        name: '',
+        zone: ''
+      });
+      setErrors({}); // Optionally reset errors
+    }
+  }, [isOpen]);
+
   // Fetch zones for the dropdown
   useEffect(() => {
     const fetchZones = async () => {
@@ -81,6 +92,9 @@ function CreateCounterModal({
       };
       
       await post('/counter/', dataToSubmit);
+      
+      // Show success toast
+      toast.success('Counter created successfully');
       
       if (onCounterCreated) {
         onCounterCreated();

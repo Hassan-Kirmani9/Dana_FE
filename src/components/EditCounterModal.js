@@ -24,18 +24,22 @@ function EditCounterModal({
   });
 
   const [zones, setZones] = useState([]);
+  const [zonesLoading, setZonesLoading] = useState(true); 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Fetch zones for the dropdown
+  
   useEffect(() => {
     const fetchZones = async () => {
       try {
-        const response = await get('/zone/list/'); // Adjust endpoint if needed
+        setZonesLoading(true); 
+        const response = await get('/zone/list/');
         setZones(response);
       } catch (error) {
         console.error('Error fetching zones:', error);
         toast.error('Failed to load zones');
+      } finally {
+        setZonesLoading(false); 
       }
     };
 
@@ -44,15 +48,16 @@ function EditCounterModal({
     }
   }, [isOpen]);
 
-  // Initialize form data when modal opens or counterData changes
+  
   useEffect(() => {
-    if (counterData) {
+    if (isOpen && counterData) {
       setFormData({
         name: counterData.name || '',
-        zone: counterData.zone?.id?.toString() || '' // Assuming zone is an object with id
+        zone: counterData.zone_id ? counterData.zone_id.toString() : '' 
       });
+      setErrors({}); 
     }
-  }, [counterData]);
+  }, [isOpen, counterData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -88,10 +93,12 @@ function EditCounterModal({
       
       const dataToSubmit = {
         name: formData.name.trim(),
-        zone: parseInt(formData.zone)
+        zone: parseInt(formData.zone) 
       };
       
       await patch(`/counter/${counterData.id}/`, dataToSubmit);
+      
+      toast.success('Counter updated successfully');
       
       if (onCounterUpdated) {
         onCounterUpdated();
@@ -110,57 +117,67 @@ function EditCounterModal({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalHeader>Edit Counter</ModalHeader>
       <ModalBody>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <Label>
-              <span>Counter Name *</span>
-              <Input 
-                className="mt-1"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter counter name"
-              />
-              {errors.name && (
-                <span className="text-xs text-red-600">{errors.name}</span>
-              )}
-            </Label>
+        {zonesLoading ? (
+          <div className="text-center py-4">
+            <p className="text-gray-700 dark:text-gray-300">Loading zones...</p>
           </div>
-          
-          <div className="mb-4">
-            <Label>
-              <span>Zone *</span>
-              <Select
-                className="mt-1"
-                name="zone"
-                value={formData.zone}
-                onChange={handleChange}
-              >
-                <option value="">Select a zone</option>
-                {zones.map((zone) => (
-                  <option key={zone.id} value={zone.id}>
-                    {zone.name}
-                  </option>
-                ))}
-              </Select>
-              {errors.zone && (
-                <span className="text-xs text-red-600">{errors.zone}</span>
-              )}
-            </Label>
+        ) : zones.length === 0 ? (
+          <div className="text-center py-4">
+            <p className="text-red-600 dark:text-red-400">No zones available</p>
           </div>
-          
-          {errors.submit && (
+        ) : (
+          <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <p className="text-sm text-red-600">{errors.submit}</p>
+              <Label>
+                <span>Counter Name *</span>
+                <Input 
+                  className="mt-1"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter counter name"
+                />
+                {errors.name && (
+                  <span className="text-xs text-red-600">{errors.name}</span>
+                )}
+              </Label>
             </div>
-          )}
-        </form>
+            
+            <div className="mb-4">
+              <Label>
+                <span>Zone *</span>
+                <Select
+                  className="mt-1"
+                  name="zone"
+                  value={formData.zone}
+                  onChange={handleChange}
+                >
+                  <option value="">Select a zone</option>
+                  {zones.map((zone) => (
+                    <option key={zone.id} value={zone.id.toString()}>
+                      {zone.name}
+                    </option>
+                  ))}
+                </Select>
+                {errors.zone && (
+                  <span className="text-xs text-red-600">{errors.zone}</span>
+                )}
+              </Label>
+            </div>
+            
+            {errors.submit && (
+              <div className="mb-4">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
+          </form>
+        )}
       </ModalBody>
       <ModalFooter>
         <div className="flex flex-col space-y-2 sm:space-y-0 sm:space-x-2 sm:flex-row">
           <Button 
             onClick={handleSubmit} 
-            disabled={isSubmitting}
+            disabled={isSubmitting || zonesLoading || zones.length === 0} 
           >
             {isSubmitting ? 'Updating...' : 'Update Counter'}
           </Button>

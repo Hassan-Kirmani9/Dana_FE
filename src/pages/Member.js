@@ -66,7 +66,6 @@ function Member() {
 
     const handleMemberCreated = () => {
         setRefreshTrigger(prev => prev + 1);
-        toast.success('Member created successfully');
     };
 
     const handleMemberUpdated = () => {

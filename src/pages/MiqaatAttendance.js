@@ -73,6 +73,17 @@ function MiqaatAttendance() {
       toast.error('Failed to delete attendance record. Please try again.');
     }
   };
+  const formatTimeToAMPM = (timeString) => {
+    if (!timeString) return 'N/A';
+    
+    const [hours, minutes] = timeString.split(':');
+    
+    let hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    
+    return `${hour}:${minutes} ${ampm}`;
+  };
 
   const handleEditAttendance = (attendanceItem) => {
     setCurrentAttendance(attendanceItem);
@@ -182,10 +193,10 @@ function MiqaatAttendance() {
                       <span className="text-sm font-medium">{item.member_name || 'N/A'}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm">{item.checkin_time || 'N/A'}</span>
+                    <span className="text-sm">{formatTimeToAMPM(item.checkin_time)}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm">{item.checkout_time || 'N/A'}</span>
+                    <span className="text-sm">{formatTimeToAMPM(item.checkout_time)}</span>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">{item.zone_name || 'N/A'}</span>

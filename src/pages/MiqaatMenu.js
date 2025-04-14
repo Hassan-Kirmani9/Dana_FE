@@ -51,7 +51,6 @@ function MiqaatMenu() {
       setMiqaatDetails(response);
     } catch (err) {
       console.error('Error fetching miqaat details:', err);
-      // Don't set error state for miqaat details to avoid blocking the UI
     }
   };
 
@@ -95,6 +94,11 @@ function MiqaatMenu() {
     setExpandedItem(expandedItem === id ? null : id);
   };
 
+  const existingMenuItems = menuData?.miqaat_menu?.map(item => ({
+    menu_id: item.menu_id,
+    menu_name: item.menu_name
+  })) || [];
+
   return (
     <div className="w-full px-4 py-6">
       {/* Header */}
@@ -134,7 +138,7 @@ function MiqaatMenu() {
       {/* Loading State */}
       {isLoading ? (
         <div className="flex justify-center my-8">
-          <p className="text-gray-700">Loading data...</p>
+          <p className="text-gray-700 dark:text-gray-300">Loading data...</p>
         </div>
       ) : error ? (
         <div className="text-center py-8">
@@ -244,17 +248,17 @@ function MiqaatMenu() {
         </>
       )}
 
-      {/* Create Menu Modal */}
       {isModalOpen && (
-                <CreateMiqaatMenuModal
-                    isOpen={isModalOpen}
-                    onClose={handleModalClose}
-                    miqaatId={id}
-                    onSuccess={handleMenuCreated}
-                />
-            )}
-        </div>
-    );
+        <CreateMiqaatMenuModal
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          miqaatId={id}
+          onSuccess={handleMenuCreated}
+          existingMenuItems={existingMenuItems}
+        />
+      )}
+    </div>
+  );
 }
 
 export default MiqaatMenu;

@@ -9,12 +9,14 @@ import {
   Select
 } from '@windmill/react-ui';
 import { get, post } from '../api/axios';
+import toast from 'react-hot-toast';
 
 const CreateMiqaatMenuModal = ({ 
   isOpen, 
   onClose, 
   miqaatId, 
-  onSuccess 
+  onSuccess,
+  existingMenuItems
 }) => {
   const [formData, setFormData] = useState({
     miqaat: miqaatId || '',
@@ -38,9 +40,13 @@ const CreateMiqaatMenuModal = ({
           get('/menu/list/')
         ]);
 
+        const filteredMenus = menusRes.filter(menu => 
+          !existingMenuItems.some(existingItem => existingItem.menu_id === menu.id)
+        );
+
         setDropdownOptions({
           miqaats: miqaatsRes,
-          menus: menusRes
+          menus: filteredMenus
         });
       } catch (err) {
         console.error('Error fetching dropdown options:', err);
@@ -51,7 +57,7 @@ const CreateMiqaatMenuModal = ({
     if (isOpen) {
       fetchDropdownOptions();
     }
-  }, [isOpen]);
+  }, [isOpen, existingMenuItems]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -92,9 +98,13 @@ const CreateMiqaatMenuModal = ({
         menu: ''
       });
       onClose();
+
+      toast.success('Menu item added successfully');
     } catch (err) {
       console.error('Error creating miqaat menu record:', err);
-      setError(err.response?.data?.message || 'Failed to create menu record');
+      const errorMessage = err.response?.data?.message || 'Failed to create menu record';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -143,22 +153,25 @@ const CreateMiqaatMenuModal = ({
                 required
               >
                 <option value="">Select Menu Item</option>
-                {dropdownOptions.menus.map(menu => (
-                  <option key={menu.id} value={menu.id}>
-                    {menu.name || `Menu #${menu.id}`}
-                  </option>
-                ))}
+                {dropdownOptions.menus.length === 0 ? (
+                  <option disabled>No available menu items</option>
+                ) : (
+                  dropdownOptions.menus.map(menu => (
+                    <option key={menu.id} value={menu.id}>
+                      {menu.name || `Menu #${menu.id}`}
+                    </option>
+                  ))
+                )}
               </Select>
             </Label>
           </div>
         </form>
       </ModalBody>
       <ModalFooter>
-     
         <div className="hidden sm:block">
           <Button 
             onClick={handleSubmit} 
-            disabled={isSubmitting}
+            disabled={isSubmitting || dropdownOptions.menus.length === 0}
           >
             {isSubmitting ? 'Saving...' : 'Save'}
           </Button>
@@ -166,12 +179,11 @@ const CreateMiqaatMenuModal = ({
         
         {/* Mobile Buttons */}
         <div className="w-full sm:hidden">
-        
           <Button 
             block 
             size="large" 
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || dropdownOptions.menus.length === 0}
           >
             {isSubmitting ? 'Saving...' : 'Save'}
           </Button>

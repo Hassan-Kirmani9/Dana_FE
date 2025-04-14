@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Add useEffect import
 import { useHistory } from 'react-router-dom';
 import {
   Modal,
@@ -28,6 +28,17 @@ const CreateMenuModal = ({
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Reset formData when modal opens or closes
+  useEffect(() => {
+    if (isOpen) {
+      // Reset form when modal opens
+      setFormData({
+        name: '',
+        description: ''
+      });
+    }
+  }, [isOpen]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -111,9 +122,6 @@ const CreateMenuModal = ({
       </ModalBody>
       <ModalFooter>
         <div className="hidden sm:block">
-        
-        </div>
-        <div className="hidden sm:block">
           <Button 
             onClick={handleSubmit} 
             disabled={isSubmitting}
@@ -124,7 +132,6 @@ const CreateMenuModal = ({
         
         {/* Mobile buttons */}
         <div className="w-full sm:hidden">
-          
           <Button 
             block 
             size="large" 
