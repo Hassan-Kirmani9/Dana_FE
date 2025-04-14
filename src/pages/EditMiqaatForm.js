@@ -286,9 +286,7 @@ const EditMiqaatForm = () => {
               />
             </Label>
           </div>
-        </div>
-
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-center md:justify-end md:mt-12 mt-6 space-x-4">
      
           <Button 
             type="submit"
@@ -297,6 +295,8 @@ const EditMiqaatForm = () => {
             {isSubmitting ? 'Updating...' : 'Update Miqaat'}
           </Button>
         </div>
+        </div>
+
       </form>
     </>
   );

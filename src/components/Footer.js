@@ -12,7 +12,7 @@ const Footer = () => {
             textAlign: 'center',
             padding: '0.75rem',
             fontSize: '0.875rem',
-            zIndex: 50,
+            zIndex: 0,
             // background: "linear-gradient(45deg, #000000, #300030, #4d0014, #200020)"
             background: "linear-gradient(ellipse at center, #DC143C 0%, #300040 50%, #000000 80%)"
             

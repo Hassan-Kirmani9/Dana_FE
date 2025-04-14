@@ -4,6 +4,8 @@ import { FaEdit, FaTrash, FaPlus, FaChevronLeft, FaChevronRight, FaTimes } from 
 import PageTitle from "../components/Typography/PageTitle";
 import { post, get, _delete } from "../api/axios";
 import toast from "react-hot-toast";
+import { Button } from '@windmill/react-ui'
+
 
 function Tables() {
   const location = useLocation();
@@ -104,7 +106,6 @@ function Tables() {
       storedSelectedEvent = parsedState.selectedEvent;
     }
 
-    // Prioritize location.state if available, otherwise use localStorage
     if (isMobileView) {
       if (location.state?.fromFeatureModal && location.state?.selectedEvent) {
         console.log('Reopening modal with selectedEvent from location.state:', location.state.selectedEvent);
@@ -114,7 +115,6 @@ function Tables() {
         console.log('Reopening modal with selectedEvent from localStorage:', storedSelectedEvent);
         setSelectedEvent(storedSelectedEvent);
         setIsDialogOpen(true);
-        // Clear the stored state after using it to avoid unintended reopening
         localStorage.removeItem('featureModalState');
       } else {
         console.log('Conditions not met to reopen modal');
@@ -243,12 +243,12 @@ function Tables() {
     <div className="w-full px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <PageTitle>{getPageTitle()}</PageTitle>
-        <button
+        <Button
           className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded flex items-center"
           onClick={handleCreateClick}
         >
           <FaPlus className="mr-2" /> Create
-        </button>
+        </Button>
       </div>
 
       {isLoading ? (

@@ -302,9 +302,7 @@ function Forms() {
               />
             </Label>
           </div>
-        </div>
-
-        <div className="flex justify-end">
+        <div className="flex md:justify-end justify-center mt-6 md:mt-12">
           <Button
             type="submit"
             disabled={isSubmitting}
@@ -312,6 +310,8 @@ function Forms() {
             {isSubmitting ? 'Creating...' : 'Create Miqaat'}
           </Button>
         </div>
+        </div>
+
       </form>
     </>
   )

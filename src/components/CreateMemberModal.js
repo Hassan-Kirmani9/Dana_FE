@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Add useEffect import
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   ModalHeader,
@@ -29,7 +29,7 @@ function CreateMemberModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
-  // Reset formData when modal opens
+  
   useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -40,7 +40,7 @@ function CreateMemberModal({
         email_address: '',
         mohalla: ''
       });
-      setErrors({}); // Optionally reset errors as well
+      setErrors({});
     }
   }, [isOpen]);
 
@@ -83,32 +83,61 @@ function CreateMemberModal({
     try {
       setIsSubmitting(true);
       
-      // Prepare data for submission
+      
       const dataToSubmit = {
         ...formData,
-        // Convert empty strings to null for optional fields
+        
         contact_number: formData.contact_number || null,
         whatsapp_number: formData.whatsapp_number || null,
         email_address: formData.email_address || null,
         mohalla: formData.mohalla || null
       };
       
-      // Send POST request to create member
+      
       const response = await post('/member/', dataToSubmit);
       
-      // Show success toast
+      
       toast.success('Member created successfully');
       
-      // Call the callback to refresh the member list
+      
       if (onMemberCreated) {
         onMemberCreated();
       }
       
-      // Close the modal
+      
       onClose();
     } catch (error) {
       console.error('Error creating member:', error);
-      setErrors({ submit: 'Failed to create member. Please try again.' });
+      
+      
+      if (error && typeof error === 'object') {
+        const backendErrors = error;
+
+        
+        if (typeof backendErrors === 'object' && !Array.isArray(backendErrors)) {
+          const newErrors = {};
+          Object.keys(backendErrors).forEach((key) => {
+            const errorMessage = backendErrors[key];
+            
+            if (Array.isArray(errorMessage)) {
+              newErrors[key] = errorMessage[0]?.charAt(0).toUpperCase() + errorMessage[0]?.slice(1) || 'An error occurred';
+            } else if (typeof errorMessage === 'string') {
+              newErrors[key] = errorMessage.charAt(0).toUpperCase() + errorMessage.slice(1);
+            } else {
+              newErrors[key] = 'An error occurred';
+            }
+          });
+          setErrors(newErrors);
+        } else if (typeof backendErrors === 'string') {
+          
+          setErrors({ submit: backendErrors.charAt(0).toUpperCase() + backendErrors.slice(1) });
+        } else {
+          setErrors({ submit: 'An unexpected error occurred. Please try again.' });
+        }
+      } else {
+        
+        setErrors({ submit: 'Failed to connect to the server. Please try again.' });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -120,7 +149,7 @@ function CreateMemberModal({
       <ModalBody>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {/* ITS Number */}
+            {}
             <div className="mb-4">
               <Label>
                 <span>ITS Number *</span>
@@ -138,7 +167,7 @@ function CreateMemberModal({
               </Label>
             </div>
             
-            {/* Full Name */}
+            {}
             <div className="mb-4">
               <Label>
                 <span>Full Name *</span>
@@ -155,7 +184,7 @@ function CreateMemberModal({
               </Label>
             </div>
 
-            {/* Contact Number */}
+            {}
             <div className="mb-4">
               <Label>
                 <span>Contact Number</span>
@@ -166,10 +195,13 @@ function CreateMemberModal({
                   onChange={handleChange}
                   placeholder="Enter contact number"
                 />
+                {errors.contact_number && (
+                  <span className="text-xs text-red-600">{errors.contact_number}</span>
+                )}
               </Label>
             </div>
 
-            {/* WhatsApp Number */}
+            {}
             <div className="mb-4">
               <Label>
                 <span>WhatsApp Number</span>
@@ -180,29 +212,32 @@ function CreateMemberModal({
                   onChange={handleChange}
                   placeholder="Enter WhatsApp number"
                 />
-              </Label>
-            </div>
-
-          </div>
-            {/* Email Address */}
-            <div className="mb-4">
-              <Label>
-                <span>Email Address</span>
-                <Input 
-                  className="mt-1"
-                  name="email_address"
-                  value={formData.email_address}
-                  onChange={handleChange}
-                  placeholder="Enter email address"
-                  type="email"
-                />
-                {errors.email_address && (
-                  <span className="text-xs text-red-600">{errors.email_address}</span>
+                {errors.whatsapp_number && (
+                  <span className="text-xs text-red-600">{errors.whatsapp_number}</span>
                 )}
               </Label>
             </div>
+          </div>
 
-          {/* Mohalla - Full width */}
+          {}
+          <div className="mb-4">
+            <Label>
+              <span>Email Address</span>
+              <Input 
+                className="mt-1"
+                name="email_address"
+                value={formData.email_address}
+                onChange={handleChange}
+                placeholder="Enter email address"
+                type="email"
+              />
+              {errors.email_address && (
+                <span className="text-xs text-red-600">{errors.email_address}</span>
+              )}
+            </Label>
+          </div>
+
+          {}
           <div className="mb-4">
             <Label>
               <span>Mohalla</span>
@@ -214,6 +249,9 @@ function CreateMemberModal({
                 placeholder="Enter mohalla details"
                 rows="3"
               />
+              {errors.mohalla && (
+                <span className="text-xs text-red-600">{errors.mohalla}</span>
+              )}
             </Label>
           </div>
           
