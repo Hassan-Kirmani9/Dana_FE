@@ -82,7 +82,6 @@ function CreateDistributionModal({ isOpen, onClose, onSuccess }) {
             };
 
             const response = await post('/distribution/', payload);
-            console.log('Distribution created:', response);
 
             // Reset form and close modal
             setFormData({

@@ -231,11 +231,7 @@ const CreateMiqaatAttendanceModal = ({
         </form>
       </ModalBody>
       <ModalFooter>
-        <div className="hidden sm:block">
-          <Button layout="outline" onClick={onClose}>
-            Cancel
-          </Button>
-        </div>
+     
         <div className="hidden sm:block">
           <Button
             onClick={handleSubmit}
@@ -247,15 +243,7 @@ const CreateMiqaatAttendanceModal = ({
 
         {/* Mobile buttons */}
         <div className="w-full sm:hidden">
-          <Button
-            block
-            size="large"
-            layout="outline"
-            onClick={onClose}
-            className="mb-4"
-          >
-            Cancel
-          </Button>
+        
           <Button
             block
             size="large"

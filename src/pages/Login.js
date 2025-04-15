@@ -50,17 +50,14 @@ function Login() {
       if (response) {
         if (response.access) {
           localStorage.setItem("accessToken", response.access);
-          console.log('Access token stored:', response.access);
         }
 
         if (response.refresh) {
           localStorage.setItem("refreshToken", response.refresh);
-          console.log('Refresh token stored:', response.refresh);
         }
 
         if (response.user) {
           localStorage.setItem("user", JSON.stringify(response.user));
-          console.log('User info stored:', response.user);
         }
       }
 

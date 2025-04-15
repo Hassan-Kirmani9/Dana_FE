@@ -1,19 +1,19 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { DropdownIcon } from '../../icons'
-import * as Icons from '../../icons'
-import { Transition } from '@windmill/react-ui'
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { DropdownIcon } from '../../icons';
+import * as Icons from '../../icons';
+import { Transition } from '@windmill/react-ui';
 
 function Icon({ icon, ...props }) {
-  const Icon = Icons[icon]
-  return <Icon {...props} />
+  const Icon = Icons[icon];
+  return <Icon {...props} />;
 }
 
-function SidebarSubmenu({ route }) {
-  const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false)
+function SidebarSubmenu({ route, onLinkClick }) {
+  const [isDropdownMenuOpen, setIsDropdownMenuOpen] = useState(false);
 
   function handleDropdownMenuClick() {
-    setIsDropdownMenuOpen(!isDropdownMenuOpen)
+    setIsDropdownMenuOpen(!isDropdownMenuOpen);
   }
 
   return (
@@ -47,7 +47,13 @@ function SidebarSubmenu({ route }) {
               className="px-2 py-1 transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
               key={r.name}
             >
-              <Link className="w-full" to={r.path}>
+              <Link
+                className="w-full"
+                to={r.path}
+                onClick={() => {
+                  onLinkClick(r.path);
+                }}
+              >
                 {r.name}
               </Link>
             </li>
@@ -55,7 +61,7 @@ function SidebarSubmenu({ route }) {
         </ul>
       </Transition>
     </li>
-  )
+  );
 }
 
-export default SidebarSubmenu
+export default SidebarSubmenu;

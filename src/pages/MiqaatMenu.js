@@ -11,7 +11,6 @@ import {
   TableRow,
   TableContainer,
 } from '@windmill/react-ui';
-
 import CreateMiqaatMenuModal from '../components/CreateMiqaatMenuModal';
 
 function MiqaatMenu() {
@@ -101,7 +100,6 @@ function MiqaatMenu() {
 
   return (
     <div className="w-full px-4 py-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center">
           <button
@@ -135,10 +133,9 @@ function MiqaatMenu() {
         </button>
       </div>
 
-      {/* Loading State */}
       {isLoading ? (
         <div className="flex justify-center my-8">
-          <p className="text-gray-700 dark:text-gray-300">Loading data...</p>
+          <p className="text-gray-700 dark:text-300">Loading data...</p>
         </div>
       ) : error ? (
         <div className="text-center py-8">

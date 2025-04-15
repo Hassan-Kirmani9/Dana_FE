@@ -1,17 +1,41 @@
-import React from 'react'
-import routes from '../../routes/sidebar'
-import { NavLink, Route } from 'react-router-dom'
-import * as Icons from '../../icons'
-import SidebarSubmenu from './SidebarSubmenu'
-import { Button } from '@windmill/react-ui'
-import logo from '../../assets/img/rice3.png'
+import React, { useContext } from 'react';
+import routes from '../../routes/sidebar';
+import { NavLink, Route } from 'react-router-dom';
+import * as Icons from '../../icons';
+import SidebarSubmenu from './SidebarSubmenu';
+import { Button } from '@windmill/react-ui';
+import logo from '../../assets/img/rice3.png';
+import { SidebarContext } from '../../context/SidebarContext';
+import { useModal } from '../../context/ModalContext';
 
 function Icon({ icon, ...props }) {
-  const Icon = Icons[icon]
-  return <Icon {...props} />
+  const Icon = Icons[icon];
+  return <Icon {...props} />;
 }
 
 function SidebarContent() {
+  const { closeSidebar } = useContext(SidebarContext);
+  const { clearModalState, modalState } = useModal();
+
+  const featurePaths = [
+    '/app/miqaat-menu/',
+    '/app/miqaat-attendance/',
+    '/app/counter-packing/',
+    '/app/distribution/',
+    '/app/leftover-degs/',
+  ];
+
+  const handleLinkClick = (path) => {
+    const isNavigatingToFeaturePage = featurePaths.some(featurePath => path.includes(featurePath));
+    const isNavigatingToTables = path.includes('/app/tables');
+
+    if (!isNavigatingToFeaturePage && !isNavigatingToTables) {
+      clearModalState();
+    } 
+
+    closeSidebar();
+  };
+
   return (
     <div className="py-4 text-gray-500 dark:text-gray-400">
       <div className="ml-6 flex items-center">
@@ -27,7 +51,11 @@ function SidebarContent() {
       <ul className="mt-6">
         {routes.map((route) =>
           route.routes ? (
-            <SidebarSubmenu route={route} key={route.name} />
+            <SidebarSubmenu 
+              route={route} 
+              key={route.name} 
+              onLinkClick={handleLinkClick}
+            />
           ) : (
             <li className="relative px-6 py-3" key={route.name}>
               <NavLink
@@ -35,6 +63,7 @@ function SidebarContent() {
                 to={route.path}
                 className="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 hover:text-gray-800 dark:hover:text-gray-200"
                 activeClassName="text-gray-800 dark:text-gray-100"
+                onClick={() => handleLinkClick(route.path)}
               >
                 <Route path={route.path} exact={route.exact}>
                   <span
@@ -53,4 +82,4 @@ function SidebarContent() {
   )
 }
 
-export default SidebarContent
+export default SidebarContent;

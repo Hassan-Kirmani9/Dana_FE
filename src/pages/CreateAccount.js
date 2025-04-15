@@ -49,11 +49,9 @@ function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted, attempting to create account");
     setError('');
     
     if (!validateForm()) {
-      console.log("Form validation failed");
       return;
     }
     
@@ -66,11 +64,9 @@ function Signup() {
         password: formData.password
       };
       
-      console.log("Sending signup request with payload:", payload);
       
       const response = await post('/signup/', payload);
       
-      console.log('Signup successful:', response);
       
       toast.success('Account created successfully!', {
         duration: 4000, 
@@ -105,8 +101,6 @@ function Signup() {
       setIsLoading(false);
     }
   };
-
-  console.log("Post function available:", typeof post === 'function');
 
   return (
     <div className="flex items-center min-h-screen p-6 bg-gray-50 dark:bg-gray-900">
@@ -177,7 +171,6 @@ function Signup() {
                 block 
                 className="mt-4"
                 disabled={isLoading}
-                onClick={() => console.log("Button clicked")}
               >
                 {isLoading ? 'Creating account...' : 'Create account'}
               </Button>

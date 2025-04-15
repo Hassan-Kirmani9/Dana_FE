@@ -4,12 +4,12 @@ import { FaEdit, FaTrash, FaPlus, FaChevronLeft, FaChevronRight, FaTimes } from 
 import PageTitle from "../components/Typography/PageTitle";
 import { post, get, _delete } from "../api/axios";
 import toast from "react-hot-toast";
-import { Button } from '@windmill/react-ui'
-
+import { useModal } from '../context/ModalContext';
 
 function Tables() {
   const location = useLocation();
   const history = useHistory();
+  const { modalState, openModal, closeModal, clearModalState } = useModal();
 
   const queryParams = new URLSearchParams(location.search);
   const miqaatType = queryParams.get('miqaat_type');
@@ -18,14 +18,13 @@ function Tables() {
   const [tableData, setTableData] = useState([]);
   const [totalResults, setTotalResults] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showThaalsModal, setShowThaalsModal] = useState(false);
   const [selectedThaals, setSelectedThaals] = useState(null);
 
   const prevMiqaatTypeRef = useRef();
   const fetchingRef = useRef(false);
   const initialRenderRef = useRef(true);
+  const prevLocationKeyRef = useRef(location.key); // Track location changes
 
   const resultsPerPage = 10;
 
@@ -92,37 +91,29 @@ function Tables() {
     }
   }, [miqaatType]);
 
+  // Handle modal state when navigating to Tables
   useEffect(() => {
+   
+
+    // Only proceed if the location has actually changed
+    if (location.key === prevLocationKeyRef.current) {
+      return;
+    }
+
+    prevLocationKeyRef.current = location.key;
 
     const isMobileView = window.innerWidth < 768;
 
-    const storedState = localStorage.getItem('featureModalState');
-    let fromFeatureModal = false;
-    let storedSelectedEvent = null;
-
-    if (storedState) {
-      const parsedState = JSON.parse(storedState);
-      fromFeatureModal = parsedState.fromFeatureModal;
-      storedSelectedEvent = parsedState.selectedEvent;
-    }
-
     if (isMobileView) {
-      if (location.state?.fromFeatureModal && location.state?.selectedEvent) {
-        console.log('Reopening modal with selectedEvent from location.state:', location.state.selectedEvent);
-        setSelectedEvent(location.state.selectedEvent);
-        setIsDialogOpen(true);
-      } else if (fromFeatureModal && storedSelectedEvent) {
-        console.log('Reopening modal with selectedEvent from localStorage:', storedSelectedEvent);
-        setSelectedEvent(storedSelectedEvent);
-        setIsDialogOpen(true);
-        localStorage.removeItem('featureModalState');
-      } else {
-        console.log('Conditions not met to reopen modal');
+      if (modalState.fromFeatureModal && modalState.selectedEvent && !modalState.isDialogOpen) {
+        openModal(modalState.selectedEvent, true);
+      } else if (modalState.isDialogOpen && !modalState.fromFeatureModal) {
+        closeModal();
       }
-    } else {
-      console.log('Not in mobile view, skipping modal reopen');
-    }
-  }, [location]);
+    } else if (modalState.isDialogOpen) {
+      closeModal();
+    } 
+  }, [location.key, modalState.fromFeatureModal, modalState.selectedEvent, modalState.isDialogOpen, openModal, closeModal]);
 
   const onPageChange = (p) => {
     if (p !== currentPage && !fetchingRef.current) {
@@ -171,12 +162,8 @@ function Tables() {
 
     const navigationState = {
       fromFeatureModal: fromFeatureModal,
-      selectedEvent: fromFeatureModal ? selectedEvent : null,
+      selectedEvent: fromFeatureModal ? modalState.selectedEvent : null,
     };
-
-    if (fromFeatureModal) {
-      localStorage.setItem('featureModalState', JSON.stringify(navigationState));
-    }
 
     history.push(navigationPath, navigationState);
   };
@@ -201,8 +188,7 @@ function Tables() {
   };
 
   const handleRowClick = (event) => {
-    setSelectedEvent(event);
-    setIsDialogOpen(true);
+    openModal(event);
   };
 
   const getFeatureColor = (feature) => {
@@ -211,7 +197,7 @@ function Tables() {
       "Attendance": "bg-green-500",
       "Counter Packing": "bg-yellow-500",
       "Distribution": "bg-purple-500",
-      "Leftover Degs": "bg-teal-500"
+      "Leftover Degs": "bg-teal-500",
     };
     return colorMap[feature] || "bg-gray-500";
   };
@@ -224,7 +210,7 @@ function Tables() {
       miqaatName: event.miqaat_name,
       polled: event.thaals_polled || 0,
       cooked: event.thaals_cooked || 0,
-      served: event.thaals_served || 0
+      served: event.thaals_served || 0,
     });
     setShowThaalsModal(true);
   };
@@ -243,12 +229,12 @@ function Tables() {
     <div className="w-full px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <PageTitle>{getPageTitle()}</PageTitle>
-        <Button
+        <button
           className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded flex items-center"
           onClick={handleCreateClick}
         >
           <FaPlus className="mr-2" /> Create
-        </Button>
+        </button>
       </div>
 
       {isLoading ? (
@@ -319,7 +305,7 @@ function Tables() {
                             { name: 'Attendance', type: 'miqaat-attendance' },
                             { name: 'Counter Packing', type: 'counter-packing' },
                             { name: 'Distribution', type: 'distribution' },
-                            { name: 'Leftover Degs', type: 'leftover-degs' }
+                            { name: 'Leftover Degs', type: 'leftover-degs' },
                           ].map((feature) => (
                             <button
                               key={feature.name}
@@ -426,14 +412,14 @@ function Tables() {
         </>
       )}
 
-      {isDialogOpen && selectedEvent && (
+      {modalState.isDialogOpen && modalState.selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg w-11/12 max-w-md max-h-[90vh] overflow-auto">
             <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-300">{selectedEvent.miqaat_name}</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-300">{modalState.selectedEvent.miqaat_name}</h2>
               <button
                 className="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-                onClick={() => setIsDialogOpen(false)}
+                onClick={closeModal}
               >
                 <FaTimes className="h-6 w-6" />
               </button>
@@ -442,25 +428,25 @@ function Tables() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Date</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{new Date(selectedEvent.miqaat_date).toLocaleDateString()}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{new Date(modalState.selectedEvent.miqaat_date).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Hijri Date</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.hijri_date}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{modalState.selectedEvent.hijri_date}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Thaals Polled</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.thaals_polled || 0}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{modalState.selectedEvent.thaals_polled || 0}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Thaals Cooked</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.thaals_cooked || 0}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{modalState.selectedEvent.thaals_cooked || 0}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Thaals Served</p>
-                  <p className="font-medium text-gray-900 dark:text-white">{selectedEvent.thaals_served || 0}</p>
+                  <p className="font-medium text-gray-900 dark:text-white">{modalState.selectedEvent.thaals_served || 0}</p>
                 </div>
               </div>
               <div>
@@ -470,11 +456,11 @@ function Tables() {
                     { name: 'Attendance', type: 'miqaat-attendance', color: 'bg-green-500' },
                     { name: 'Counter Packing', type: 'counter-packing', color: 'bg-yellow-500' },
                     { name: 'Distribution', type: 'distribution', color: 'bg-purple-500' },
-                    { name: 'Leftover Degs', type: 'leftover-degs', color: 'bg-teal-500' }
+                    { name: 'Leftover Degs', type: 'leftover-degs', color: 'bg-teal-500' },
                   ].map((feature) => (
                     <button
                       key={feature.name}
-                      onClick={(e) => handleFeatureClick(feature.type, selectedEvent.id, e, true)}
+                      onClick={(e) => handleFeatureClick(feature.type, modalState.selectedEvent.id, e, true)}
                       className={`w-full py-10 text-white rounded-lg text-base font-semibold ${feature.color} hover:opacity-90 transition-all`}
                     >
                       {feature.name}
